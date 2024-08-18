@@ -1,6 +1,6 @@
 # [digneurobot](https://t.me/digneurobot) | About
 
-**AI** bot by _**digfusion**_. 
+**AI** telegram bot by _**digfusion**_. 
 
 **Open-Source** project.
 
