@@ -3,7 +3,6 @@ import OpenAI from "openai";
 
 import { TelegramToken } from "./config.js";
 import { supportImagePath } from "./config.js";
-import { tokenOpenAI } from "./config.js";
 
 const bot = new TelegramBot(TelegramToken, { polling: true });
 const openai = new OpenAI();
