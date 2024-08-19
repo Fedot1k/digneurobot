@@ -49,7 +49,8 @@ async function reply(chatId, stage = 1, userText) {
   const dataAboutUser = usersData.find((obj) => obj.chatId == chatId);
 
   try {
-    const completion = await openai.chat.completions.create({       //TODO: API reference on OpenAI
+    const completion = await openai.chat.completions.create({
+      //TODO: API reference on OpenAI
       messages: [{ role: "system", content: `${userText}` }],
       model: "gpt-4o-mini-2024-07-18",
     });
