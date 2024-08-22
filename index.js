@@ -3,17 +3,21 @@ import OpenAI from "openai";
 
 import { TelegramToken } from "./config.js";
 import { supportImagePath } from "./config.js";
+import { ProjectApiKey } from "./config.js";
+import { OrgID } from "./config.js";
 
 const bot = new TelegramBot(TelegramToken, { polling: true });
-const openai = new OpenAI();
 const devs = [870204479];
+
+const openai = new OpenAI({
+  organization: OrgID,
+  project: ProjectApiKey,
+});
 
 let usersData = [];
 
 let introText = `Добро пожаловать в <b>Нейросетивичок</b>. Чтобы задать вопрос, напишите его в чате.\n\n<b>Команды:</b>\n<blockquote>/start - перезапуск\n/reset - сброс контекста\n/support - поддержка\n/about - о боте</blockquote>`;
-
 let aboutText = `Что такое <b>Нейросетивичок?</b>\n<blockquote>Бот, разработанный компанией digfusion с использованием OpenAI API.</blockquote>`;
-
 let supportText = `@digfusionsupport\n\nДавид | с 10:00 до 21:00\n\n@digfusion × 2024`;
 
 bot.setMyCommands([
@@ -44,29 +48,20 @@ async function first(chatId, stage = 1, about = false) {
   } catch (error) {}
 }
 
-async function reply(chatId, stage = 1, userText) {
+async function getResponse(chatId, stage = 1, userPrompt) {
   const dataAboutUser = usersData.find((obj) => obj.chatId == chatId);
 
-  try {
-    const completion = await openai.chat.completions.create({
-      //TODO: API reference on OpenAI
-      messages: [{ role: "system", content: `${userText}` }],
-      model: "gpt-4o-mini-2024-07-18",
-    });
+  console.log(`starting`);
 
-    switch (stage) {
-      case 1:
-        await bot.sendMessage(chatId, `${completion.choices[0]}`, {
-          parse_mode: `HTML`,
-          disable_web_page_preview: true,
-          reply_markup: {
-            inline_keyboard: [[]],
-          },
-        });
-        break;
-      case 2:
-        break;
-    }
+  try {
+    const response = await openai.chat.completions
+      .create({
+        Authorization: Bearer`${ProjectApiKey}`,
+        messages: [{ role: "user", content: `Say this is a test` }],
+        model: "gpt-4o-mini",
+      })
+      .asResponse();
+    console.log(response.headers.get("x-request-id"));
   } catch (error) {}
 }
 
@@ -99,7 +94,7 @@ async function StartAll() {
             break;
         }
         if (Array.from(text)[0] != "/") {
-          reply(chatId, 1, text);
+          getResponse(chatId, 1, text);
         }
       } catch (error) {}
     }

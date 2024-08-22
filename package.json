@@ -4,7 +4,7 @@
     "nodemon": "^3.1.4",
     "openai": "^4.56.0"
   },
-  "name": "trial-dynamics",
+  "name": "digneurobot",
   "version": "1.0.0",
   "type": "module",
   "main": "index.js",
