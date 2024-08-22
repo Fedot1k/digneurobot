@@ -16,7 +16,7 @@ const openai = new OpenAI({
 
 let usersData = [];
 
-let introText = `Добро пожаловать в <b>Нейросетивичок</b>. Чтобы задать вопрос, напишите его в чате.\n\n<b>Команды:</b>\n<blockquote>/start - перезапуск\n/reset - сброс контекста\n/support - поддержка\n/about - о боте</blockquote>`;
+let introText = `Добрo пожаловать в <b>Нейросетивичок</b>. Чтобы задать вопрос, напишите его в чате.\n\n<b>Команды:</b>\n<blockquote>/start - перезапуск\n/reset - сброс контекста\n/support - поддержка\n/about - о боте</blockquote>`;
 let aboutText = `Что такое <b>Нейросетивичок?</b>\n<blockquote>Бот, разработанный компанией digfusion с использованием OpenAI API.</blockquote>`;
 let supportText = `@digfusionsupport\n\nДавид | с 10:00 до 21:00\n\n@digfusion × 2024`;
 
@@ -54,13 +54,11 @@ async function getResponse(chatId, stage = 1, userPrompt) {
   console.log(`starting`);
 
   try {
-    const response = await openai.chat.completions
-      .create({
-        Authorization: Bearer`${ProjectApiKey}`,
-        messages: [{ role: "user", content: `Say this is a test` }],
-        model: "gpt-4o-mini",
-      })
-      .asResponse();
+    const response = await openai.chat.completions.create({
+      Authorization: Bearer`${ProjectApiKey}`,
+      messages: [{ role: "user", content: `Say this is a test` }],
+      model: "gpt-4o-mini",
+    });
     console.log(response.headers.get("x-request-id"));
   } catch (error) {}
 }
