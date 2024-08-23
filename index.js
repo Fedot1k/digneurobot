@@ -1,13 +1,11 @@
 import TelegramBot from "node-telegram-bot-api";
 import OpenAI from "openai";
 
-import { TelegramToken } from "./config.js";
-import { supportImagePath } from "./config.js";
-import { ProjectApiKey } from "./config.js";
-import { OrgID } from "./config.js";
+import { TelegramToken, OrgID, ProjectApiKey, supportImagePath } from "./config.js";
+import { textData, buttonData, errorData } from "./watcher.js";
 
 const bot = new TelegramBot(TelegramToken, { polling: true });
-const devs = [870204479];
+const FedotID = 870204479;
 
 const openai = new OpenAI({
   organization: OrgID,
@@ -45,7 +43,9 @@ async function first(chatId, stage = 1, about = false) {
         await bot.sendPhoto(chatId, supportImagePath, { caption: supportText });
         break;
     }
-  } catch (error) {}
+  } catch (error) {
+    errorData(chatId, dataAboutUser.login, `${String(error)}`);
+  }
 }
 
 async function getResponse(chatId, stage = 1, userPrompt) {
@@ -60,19 +60,21 @@ async function getResponse(chatId, stage = 1, userPrompt) {
       model: "gpt-4o-mini",
     });
     console.log(response.headers.get("x-request-id"));
-  } catch (error) {}
+  } catch (error) {
+    errorData(chatId, dataAboutUser.login, `${String(error)}`);
+  }
 }
 
 async function StartAll() {
   bot.on(`message`, async (message) => {
-    if (devs.includes(message.chat.id)) {
+    if (FedotID == message.chat.id) {
       let text = message.text;
       let chatId = message.chat.id;
       let userMessage = message.message_id;
 
       try {
         if (!usersData.find((obj) => obj.chatId == chatId)) {
-          usersData.push({});
+          usersData.push({ chatId: chatId, login: message.from.first_name });
         }
 
         const dataAboutUser = usersData.find((obj) => obj.chatId == chatId);
@@ -94,7 +96,10 @@ async function StartAll() {
         if (Array.from(text)[0] != "/") {
           getResponse(chatId, 1, text);
         }
-      } catch (error) {}
+        textData(chatId, dataAboutUser.login, text);
+      } catch (error) {
+        errorData(chatId, dataAboutUser.login, `${String(error)}`);
+      }
     }
   });
 }
