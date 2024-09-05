@@ -1,16 +1,10 @@
 import TelegramBot from "node-telegram-bot-api";
-import OpenAI from "openai";
 
-import { TelegramToken, OrgID, ProjectApiKey, supportImagePath } from "./config.js";
+import { TelegramToken, supportImagePath } from "./config.js";
 import { textData, buttonData, errorData } from "./watcher.js";
 
 const bot = new TelegramBot(TelegramToken, { polling: true });
 const FedotID = 870204479;
-
-const openai = new OpenAI({
-  organization: OrgID,
-  project: ProjectApiKey,
-});
 
 let usersData = [];
 
