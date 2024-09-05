@@ -6,11 +6,9 @@
 
 ## Models used
 
-• **OpenGPT 4o** - Text Chat
+• **OpenGPT 4o** - Text Chat **&** Image Generating
 
 • **Instant Video** - Video Generating
-
-• **Flux** - Image Generating
 
 [digfusion](https://t.me/digfusionbot) • [digfusionsupport](https://t.me/digfusionsupport)
 
