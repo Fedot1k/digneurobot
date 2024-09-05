@@ -2,7 +2,8 @@
   "dependencies": {
     "node-telegram-bot-api": "^0.66.0",
     "nodemon": "^3.1.4",
-    "openai": "^4.56.0"
+    "openai": "^4.56.0",
+    "requests": "^0.3.0"
   },
   "name": "digneurobot",
   "version": "1.0.0",
@@ -13,5 +14,8 @@
   },
   "author": "",
   "license": "ISC",
-  "description": ""
+  "description": "",
+  "devDependencies": {
+    "@gradio/client": "^1.6.0-beta.1"
+  }
 }

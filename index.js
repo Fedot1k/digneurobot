@@ -1,4 +1,5 @@
 import TelegramBot from "node-telegram-bot-api";
+import { Client } from "@gradio/client";
 
 import { TelegramToken, supportImagePath } from "./config.js";
 import { textData, buttonData, errorData } from "./watcher.js";
@@ -14,6 +15,9 @@ let supportText = `@digfusionsupport\n\nДавид | с 10:00 до 21:00\n\n@dig
 
 bot.setMyCommands([
   { command: "/start", description: "Перезапуск" },
+  { command: "/text", description: "Чат бот" },
+  { command: "/image", description: "Изображение" },
+  { command: "/video", description: "Видео" },
   { command: "/reset", description: "Сброс контекста" },
   { command: "/support", description: "Поддержка " },
   { command: "/about", description: "О боте" },
@@ -42,18 +46,36 @@ async function first(chatId, stage = 1, about = false) {
   }
 }
 
-async function getResponse(chatId, stage = 1, userPrompt) {
+async function getImage(chatId, userPrompt) {
   const dataAboutUser = usersData.find((obj) => obj.chatId == chatId);
 
-  console.log(`starting`);
-
+  console.log(`starting image`);
   try {
-    const response = await openai.chat.completions.create({
-      Authorization: Bearer`${ProjectApiKey}`,
-      messages: [{ role: "user", content: `Say this is a test` }],
-      model: "gpt-4o-mini",
+    const space = await Client.connect("KingNish/Image-Gen-Pro");
+    const result = await space.predict("/image_gen_pro", {
+      instruction: userPrompt,
+      input_image: null,
     });
-    console.log(response.headers.get("x-request-id"));
+
+    console.log(result.data);
+
+    await bot.sendPhoto(chatId, result.data[1].url);
+  } catch (error) {
+    errorData(chatId, dataAboutUser.login, `${String(error)}`);
+  }
+}
+
+async function getVideo(chatId, userPrompt) {
+  const dataAboutUser = usersData.find((obj) => obj.chatId == chatId);
+
+  console.log(`starting video`);
+  try {
+    const space = await Client.connect("KingNish/Instant-Video");
+    const result = await space.predict("/instant_video", {
+      instruction: userPrompt,
+    });
+
+    console.log(result.data);
   } catch (error) {
     errorData(chatId, dataAboutUser.login, `${String(error)}`);
   }
@@ -68,13 +90,22 @@ async function StartAll() {
 
       try {
         if (!usersData.find((obj) => obj.chatId == chatId)) {
-          usersData.push({ chatId: chatId, login: message.from.first_name });
+          usersData.push({ chatId: chatId, login: message.from.first_name, userAction: `text` });
         }
 
         const dataAboutUser = usersData.find((obj) => obj.chatId == chatId);
 
         switch (text) {
           case `/start`:
+            first(chatId, 1);
+            break;
+          case `/text`:
+            first(chatId, 1);
+            break;
+          case `/image`:
+            first(chatId, 1);
+            break;
+          case `/video`:
             first(chatId, 1);
             break;
           case `/reset`:
@@ -88,8 +119,19 @@ async function StartAll() {
             break;
         }
         if (Array.from(text)[0] != "/") {
-          getResponse(chatId, 1, text);
+          switch (dataAboutUser.userAction) {
+            case `text`:
+              getResponse(chatId, text);
+              break;
+            case `image`:
+              getImage(chatId, text);
+              break;
+            case `video`:
+              getVideo(chatId, text);
+              break;
+          }
         }
+
         textData(chatId, dataAboutUser.login, text);
       } catch (error) {
         errorData(chatId, dataAboutUser.login, `${String(error)}`);
