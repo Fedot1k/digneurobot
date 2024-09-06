@@ -102,8 +102,15 @@ async function first(chatId, stage = 1, about = false) {
 async function getResponse(chatId, userPrompt) {
   const dataAboutUser = usersData.find((obj) => obj.chatId == chatId);
 
-  console.log(`starting response`);
+  bot.sendChatAction(chatId, "typing");
+
   try {
+    const space = await Client.connect("KingNish/OpenGPT-4o");
+    const result = await space.predict("/chat", {
+      user_prompt: userPrompt,
+    });
+
+    console.log(result);
   } catch (error) {
     errorData(chatId, dataAboutUser.login, `${String(error)}`);
   }
@@ -112,7 +119,8 @@ async function getResponse(chatId, userPrompt) {
 async function getImage(chatId, userPrompt) {
   const dataAboutUser = usersData.find((obj) => obj.chatId == chatId);
 
-  console.log(`starting image`);
+  bot.sendChatAction(chatId, "upload_photo");
+
   try {
     const space = await Client.connect("KingNish/Image-Gen-Pro");
     const result = await space.predict("/image_gen_pro", {
@@ -120,7 +128,7 @@ async function getImage(chatId, userPrompt) {
       input_image: null,
     });
 
-    console.log(result.data);
+    bot.sendChatAction(chatId, "upload_photo");
 
     await bot.sendPhoto(chatId, result.data[1].url);
   } catch (error) {
@@ -131,14 +139,16 @@ async function getImage(chatId, userPrompt) {
 async function getVideo(chatId, userPrompt) {
   const dataAboutUser = usersData.find((obj) => obj.chatId == chatId);
 
-  console.log(`starting video`);
+  bot.sendChatAction(chatId, "record_video");
+
   try {
     const space = await Client.connect("KingNish/Instant-Video");
     const result = await space.predict("/instant_video", {
       prompt: userPrompt,
     });
 
-    console.log(result.data);
+    bot.sendChatAction(chatId, "upload_video");
+
     await bot.sendVideo(chatId, result.data[0].video.url);
   } catch (error) {
     errorData(chatId, dataAboutUser.login, `${String(error)}`);
@@ -154,7 +164,7 @@ async function StartAll() {
 
       try {
         if (!usersData.find((obj) => obj.chatId == chatId)) {
-          usersData.push({ chatId: chatId, login: message.from.first_name, userAction: `text` });
+          usersData.push({ chatId: chatId, login: message.from.first_name, userAction: `response` });
         }
 
         const dataAboutUser = usersData.find((obj) => obj.chatId == chatId);
