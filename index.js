@@ -22,8 +22,9 @@ bot.setMyCommands([
   { command: "/text", description: "Текст" },
   { command: "/image", description: "Изображение" },
   { command: "/video", description: "Видео" },
-  { command: "/support", description: "Поддержка " },
+  { command: "/support", description: "Поддержка" },
   { command: "/about", description: "О боте" },
+  { command: "/settings", description: "settings" },
 ]);
 
 async function intro(chatId) {
