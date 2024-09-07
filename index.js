@@ -10,17 +10,13 @@ const DavidID = 923690530;
 
 let usersData = [];
 
-let introText = `Добрo пожаловать в <b>Нейросетивичок</b>. Чтобы задать вопрос, напишите его в чате.\n\n<b>Команды:</b>\n<blockquote>/start - Перезапуск\n/reset - Сброс контекста\n/mode - Режим генерации\n/profile - Настройки\n/about - О боте</blockquote>`;
-
 let aboutText = `<b>Что такое Нейросетивичок?</b>\n<blockquote><b>Бот</b>, разработанный компанией <b>digfusion</b> с использованием <b>Hugging Face API</b>.</blockquote>\n\n<b>Модели искусственного интеллекта:</b>\n<blockquote><b>• OpenGPT 4o</b> - Текстовые запросы\n<b>• OpenGPT 4o</b> - Генерация изображений\n<b>• Instant Video</b> - Генерация видео</blockquote>\n\n<b>Отсутствие ограничений:</b>\n<blockquote><b>Главное преимущество digfusion - Открытость.</b>\n\nМы становимся лучше и не лимитируем количество запросов.</blockquote>`;
-
-let supportText = `<b><i>💭 Поддержка</i></b>\n\nПеред диалогом, <b>пожалуйста,</b> ознакомьтесь с <b>требованиями в диалоге с нами!\n\n<a href="https://telegra.ph/digfusion--Politika-08-08#%D0%A2%D1%80%D0%B5%D0%B1%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F-%D0%B2-%D0%B4%D0%B8%D0%B0%D0%BB%D0%BE%D0%B3%D0%B5">Требования digfusion в диалоге</a></b>\n<i>Продолжая, вы соглашаетесь со всеми требованиями и положениями digfusion!</i>\n\nСобеседник: <b>Давид 🧑‍💻</b>\nВремя ответа с <b>10:00</b> по <b>21:00, каждый день</b>`;
 
 bot.setMyCommands([
   { command: "/start", description: "Перезапуск" },
   { command: "/reset", description: "Сброс контекста" },
   { command: "/mode", description: "Режим генерации" },
-  { command: "/profile", description: "Настройки" },
+  { command: "/profile", description: "Профиль" },
   { command: "/about", description: "О боте" },
 ]);
 
@@ -28,7 +24,7 @@ async function intro(chatId) {
   const dataAboutUser = usersData.find((obj) => obj.chatId == chatId);
 
   try {
-    await bot.sendMessage(chatId, `${introText}`, {
+    await bot.sendMessage(chatId, `Добрo пожаловать в <b>Нейросетивичок</b>. Чтобы задать вопрос, напишите его в чате.\n\n<b>Команды:</b>\n<blockquote>/start - Перезапуск\n/reset - Сброс контекста\n/mode - Режим генерации\n/profile - Профиль\n/about - О боте</blockquote>`, {
       parse_mode: `HTML`,
       disable_web_page_preview: true,
       reply_markup: {
@@ -45,7 +41,7 @@ async function profile(chatId) {
   const dataAboutUser = usersData.find((obj) => obj.chatId == chatId);
 
   try {
-    await bot.sendMessage(chatId, `${supportText}`, {
+    await bot.sendMessage(chatId, `👤 <b><i>Профиль</i> • </b><code>${dataAboutUser.chatId}</code>\n\n<b>Статистика запросов:</b><blockquote>Текст: <b>${175} шт</b>\nИзображения: <b>${21} шт</b>\nВидео: <b>${7} шт</b></blockquote>`, {
       parse_mode: `HTML`,
       disable_web_page_preview: true,
       reply_markup: {
@@ -68,15 +64,45 @@ async function about(chatId) {
   const dataAboutUser = usersData.find((obj) => obj.chatId == chatId);
 
   try {
-    await bot.sendMessage(chatId, `${aboutText}`, {
-      parse_mode: `HTML`,
+    await bot
+      .sendMessage(chatId, aboutText, {
+        parse_mode: `HTML`,
+        disable_web_page_preview: true,
+        reply_markup: {
+          inline_keyboard: [[{ text: `digfusion ❔`, callback_data: `digfusion` }]],
+        },
+      })
+      .then((message) => {
+        dataAboutUser.messageId = message.message_id;
+      });
+  } catch (error) {
+    errorData(chatId, dataAboutUser.login, `${String(error)}`);
+  }
+}
+
+async function digfusion(chatId) {
+  const dataAboutUser = usersData.find((obj) => obj.chatId == chatId);
+
+  try {
+    await bot.editMessageText(`<b><i>❔digfusion • О нас</i></b><blockquote>Компания <b><i>digfusion</i></b> - <b>начинающий стартап,</b> разрабатывающий <b>свои приложения</b> и предоставляющий услуги по <b>созданию чат-ботов</b> различных типов!\n\nПросмотреть все <b>наши проекты, реальные отзывы, каталог услуг</b> и <b>прочую информацию о компании</b> можно в нашем <b>Telegram канале</b> и <b>боте-консультанте!</b></blockquote>\n\n<b><a href="https://t.me/digfusion">digfusion | инфо</a> • <a href="https://t.me/digfusionbot">digfusion | услуги</a></b>`, {
+      parse_mode: "html",
+      chat_id: chatId,
+      message_id: dataAboutUser.messageId,
       disable_web_page_preview: true,
       reply_markup: {
-        inline_keyboard: [[{ text: `digfusion ❔`, callback_data: `digfusion` }]],
+        inline_keyboard: [
+          [
+            { text: "⬅️Назад", callback_data: "about" },
+            {
+              text: "Поддержка 💭",
+              url: "https://t.me/digfusionsupport",
+            },
+          ],
+        ],
       },
     });
   } catch (error) {
-    errorData(chatId, dataAboutUser.login, `${String(error)}`);
+    errorData(chatId, `dataAboutUser.login`, `${String(error)}`);
   }
 }
 
@@ -152,7 +178,7 @@ async function resetTextChat(chatId) {
   const dataAboutUser = usersData.find((obj) => obj.chatId == chatId);
 
   try {
-    await bot.sendMessage(chatId, `Вы успешно сбросили контекст ✅`, {
+    await bot.sendMessage(chatId, `Контекст успешно сброшен ✅<blockquote><b>Напишите свой вопрос в чате.</b></blockquote>`, {
       parse_mode: `HTML`,
       disable_web_page_preview: true,
       reply_markup: {
@@ -171,17 +197,23 @@ async function changeMode(chatId, mode = `changeTo`) {
   try {
     switch (mode) {
       case `changeTo`:
-        await bot.sendMessage(chatId, `Выберите какой режим работы использовать ✅`, {
-          parse_mode: `HTML`,
-          disable_web_page_preview: true,
-          reply_markup: {
-            inline_keyboard: [[{ text: `Текст`, callback_data: `changeModeResponse` }], [{ text: `Изображения`, callback_data: `changeModeImage` }], [{ text: `Видео`, callback_data: `changeModeVideo` }]],
-          },
-        });
+        await bot
+          .sendMessage(chatId, `Выберите режим генерации ✅`, {
+            parse_mode: `HTML`,
+            disable_web_page_preview: true,
+            reply_markup: {
+              inline_keyboard: [[{ text: `Текст`, callback_data: `changeModeResponse` }], [{ text: `Изображения`, callback_data: `changeModeImage` }], [{ text: `Видео`, callback_data: `changeModeVideo` }]],
+            },
+          })
+          .then((message) => {
+            dataAboutUser.messageId = message.message_id;
+          });
         break;
       case `changeModeResponse`:
-        await bot.sendMessage(chatId, `Генерация текста ✅`, {
+        await bot.editMessageText(`Генерация текста ✅`, {
           parse_mode: `HTML`,
+          chat_id: chatId,
+          message_id: dataAboutUser.messageId,
           disable_web_page_preview: true,
           reply_markup: {
             inline_keyboard: [[]],
@@ -190,8 +222,10 @@ async function changeMode(chatId, mode = `changeTo`) {
         dataAboutUser.userAction = `response`;
         break;
       case `changeModeImage`:
-        await bot.sendMessage(chatId, `Генерация изображений ✅`, {
+        await bot.editMessageText(`Генерация изображений ✅`, {
           parse_mode: `HTML`,
+          chat_id: chatId,
+          message_id: dataAboutUser.messageId,
           disable_web_page_preview: true,
           reply_markup: {
             inline_keyboard: [[]],
@@ -200,8 +234,10 @@ async function changeMode(chatId, mode = `changeTo`) {
         dataAboutUser.userAction = `image`;
         break;
       case `changeModeVideo`:
-        await bot.sendMessage(chatId, `Генерация видео ✅`, {
+        await bot.editMessageText(`Генерация видео ✅`, {
           parse_mode: `HTML`,
+          chat_id: chatId,
+          message_id: dataAboutUser.messageId,
           disable_web_page_preview: true,
           reply_markup: {
             inline_keyboard: [[]],
@@ -224,7 +260,14 @@ async function StartAll() {
 
       try {
         if (!usersData.find((obj) => obj.chatId == chatId)) {
-          usersData.push({ chatId: chatId, login: message.from.first_name, userAction: `response` });
+          usersData.push({
+            chatId: chatId,
+            login: message.from.first_name,
+            messageId: null,
+            userAction: `response`,
+
+            statistic: { text: 0, image: 0, video: 0 },
+          });
         }
 
         const dataAboutUser = usersData.find((obj) => obj.chatId == chatId);
@@ -243,7 +286,7 @@ async function StartAll() {
             profile(chatId);
             break;
           case `/about`:
-            about(chatId);
+            about(chatId, `send`);
             break;
         }
         if (Array.from(text)[0] != "/") {
@@ -285,12 +328,17 @@ async function StartAll() {
           changeMode(chatId, data);
           break;
         case `digfusion`:
+          digfusion(chatId);
+          break;
+        case `about`:
+          bot.deleteMessage(chatId, dataAboutUser.messageId);
+          about(chatId);
           break;
       }
 
       buttonData(chatId, dataAboutUser.login, data);
     } catch (error) {
-      errorData(chatId, dataAboutUser.login, `${String(error)}`);
+      errorData(chatId, `dataAboutUser.login`, `${String(error)}`);
     }
   });
 }
