@@ -41,7 +41,7 @@ async function profile(chatId) {
   const dataAboutUser = usersData.find((obj) => obj.chatId == chatId);
 
   try {
-    await bot.sendMessage(chatId, `👤 <b><i>Профиль</i> • </b><code>${dataAboutUser.chatId}</code>\n\n<b>Статистика запросов:</b><blockquote>Текст: <b>${175} шт</b>\nИзображения: <b>${21} шт</b>\nВидео: <b>${7} шт</b></blockquote>`, {
+    await bot.sendMessage(chatId, `👤 <b><i>Профиль</i> • </b><code>${dataAboutUser.chatId}</code>\n\n<b>Статистика запросов:</b><blockquote>Текст: <b>${dataAboutUser.statistic.response} шт</b>\nИзображения: <b>${dataAboutUser.statistic.image} шт</b>\nВидео: <b>${dataAboutUser.statistic.video} шт</b></blockquote>`, {
       parse_mode: `HTML`,
       disable_web_page_preview: true,
       reply_markup: {
@@ -198,11 +198,17 @@ async function changeMode(chatId, mode = `changeTo`) {
     switch (mode) {
       case `changeTo`:
         await bot
-          .sendMessage(chatId, `Выберите режим генерации ✅`, {
+          .sendMessage(chatId, `Выберите режим генерации ✅<blockquote><b></b></blockquote>`, {
             parse_mode: `HTML`,
             disable_web_page_preview: true,
             reply_markup: {
-              inline_keyboard: [[{ text: `Текст`, callback_data: `changeModeResponse` }], [{ text: `Изображения`, callback_data: `changeModeImage` }], [{ text: `Видео`, callback_data: `changeModeVideo` }]],
+              inline_keyboard: [
+                [
+                  { text: `Текст`, callback_data: `changeModeResponse` },
+                  { text: `Изображения`, callback_data: `changeModeImage` },
+                  { text: `Видео`, callback_data: `changeModeVideo` },
+                ],
+              ],
             },
           })
           .then((message) => {
@@ -266,7 +272,7 @@ async function StartAll() {
             messageId: null,
             userAction: `response`,
 
-            statistic: { text: 0, image: 0, video: 0 },
+            statistic: { response: 0, image: 0, video: 0 },
           });
         }
 
@@ -292,12 +298,15 @@ async function StartAll() {
         if (Array.from(text)[0] != "/") {
           switch (dataAboutUser.userAction) {
             case `response`:
+              dataAboutUser.statistic.response++;
               getResponse(chatId, text);
               break;
             case `image`:
+              dataAboutUser.statistic.image++;
               getImage(chatId, text);
               break;
             case `video`:
+              dataAboutUser.statistic.video++;
               getVideo(chatId, text);
               break;
           }
