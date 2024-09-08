@@ -112,24 +112,22 @@ async function getResponse(chatId, userPrompt) {
   bot.sendChatAction(chatId, "typing");
 
   try {
-    const space = await Client.connect("emeeran/ChatGPT-4o");
-    const result = await space.predict("/chat", {
-      message: userPrompt,
-      request: "You are a helpful and powerful Chatbot.",
-      param_3: 1024,
-      param_4: 0.7,
-      param_5: 0.95,
+    const client = await Client.connect("orionai/llama-3.1-70b-demo");
+    const result = await client.predict("/predict", {
+      user_message: `${dataAboutUser.lastTextResponse != `` ? `Your previous answer: ${dataAboutUser.lastTextResponse} My new question: ${userPrompt} (dont use * in answer except in math)` : `${userPrompt} (dont use * in answer except in math)`}`,
     });
 
     bot.sendChatAction(chatId, "typing");
 
-    await bot.sendMessage(chatId, `${result.data[0]}`, {
+    await bot.sendMessage(chatId, `${result.data}`, {
       parse_mode: `HTML`,
       disable_web_page_preview: true,
       reply_markup: {
         inline_keyboard: [[]],
       },
     });
+
+    dataAboutUser.lastTextResponse = result.data;
   } catch (error) {
     console.log(error);
   }
@@ -141,15 +139,11 @@ async function getImage(chatId, userPrompt) {
   bot.sendChatAction(chatId, "upload_photo");
 
   try {
-    const space = await Client.connect("KingNish/Image-Gen-Pro");
-    const result = await space.predict("/image_gen_pro", {
-      instruction: userPrompt,
-      input_image: null,
-    });
-
     bot.sendChatAction(chatId, "upload_photo");
 
-    await bot.sendPhoto(chatId, result.data[1].url);
+    console.log(result.data);
+
+    await bot.sendPhoto(chatId, `https://prodia-fast-stable-diffusion.hf.space/file=/tmp/gradio/2c8a18f5674822a3bde832208568eb09a4bde3a0/f3ed2edc-c5a2-461c-b1ad-87283284acc7.png`);
   } catch (error) {
     errorData(chatId, dataAboutUser.login, `${String(error)}`);
   }
@@ -178,6 +172,8 @@ async function resetTextChat(chatId) {
   const dataAboutUser = usersData.find((obj) => obj.chatId == chatId);
 
   try {
+    dataAboutUser.lastTextResponse = ``;
+
     await bot.sendMessage(chatId, `Контекст успешно сброшен ✅<blockquote><b>Напишите свой вопрос в чате.</b></blockquote>`, {
       parse_mode: `HTML`,
       disable_web_page_preview: true,
@@ -185,6 +181,7 @@ async function resetTextChat(chatId) {
         inline_keyboard: [[]],
       },
     });
+
     dataAboutUser.userAction = `response`;
   } catch (error) {
     errorData(chatId, dataAboutUser.login, `${String(error)}`);
@@ -258,7 +255,7 @@ async function changeMode(chatId, mode = `changeTo`) {
 }
 
 async function StartAll() {
-  bot.on(`message`, async (message) => {
+  bot.on(`text`, async (message) => {
     if (FedotID == message.chat.id || DavidID == message.chat.id) {
       let text = message.text;
       let chatId = message.chat.id;
@@ -271,6 +268,7 @@ async function StartAll() {
             login: message.from.first_name,
             messageId: null,
             userAction: `response`,
+            lastTextResponse: ``,
 
             statistic: { response: 0, image: 0, video: 0 },
           });
