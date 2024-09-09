@@ -139,11 +139,22 @@ async function getImage(chatId, userPrompt) {
   bot.sendChatAction(chatId, "upload_photo");
 
   try {
+    const client = await Client.connect("K00B404/FLUX.1-Dev-Serverless-darn");
+    const result = await client.predict("/query", {
+      prompt: userPrompt,
+      is_negative: `(deformed, distorted, disfigured), poorly drawn, bad anatomy, wrong anatomy, extra limb, missing limb, floating limbs, (mutated hands and fingers), disconnected limbs, mutation, mutated, ugly, disgusting, blurry, amputation, misspellings, typos`,
+      steps: 35,
+      cfg_scale: 7,
+      sampler: "DPM++ 2M Karras",
+      seed: -1,
+      strength: 0.7,
+      huggingface_api_key: "Hello!!",
+      use_dev: false,
+    });
+
     bot.sendChatAction(chatId, "upload_photo");
 
-    console.log(result.data);
-
-    await bot.sendPhoto(chatId, `https://prodia-fast-stable-diffusion.hf.space/file=/tmp/gradio/2c8a18f5674822a3bde832208568eb09a4bde3a0/f3ed2edc-c5a2-461c-b1ad-87283284acc7.png`);
+    await bot.sendPhoto(chatId, result.data[0].url);
   } catch (error) {
     errorData(chatId, dataAboutUser.login, `${String(error)}`);
   }
