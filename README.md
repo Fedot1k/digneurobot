@@ -2,11 +2,15 @@
 
 **AI** telegram bot by _**digfusion**_. 
 
+Try out our **free product** with **unlimited uses**.
+
 **Open-Source** project.
 
 ## Models used
 
-• **OpenGPT 4o** - Text Chat **&** Image Generating
+• **Llama 3.1 70b** - Text Chat
+
+• **FLUX.1 DEV** - Image Generating
 
 • **Instant Video** - Video Generating
 
