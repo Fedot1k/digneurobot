@@ -8,7 +8,7 @@
 
 • **Llama 3.1 70b** - Text Chat
 
-• **OpenGPT 4o** - Image Generating
+• **FLUX.1 DEV** - Image Generating
 
 • **Instant Video** - Video Generating
 
