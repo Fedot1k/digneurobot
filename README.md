@@ -2,6 +2,8 @@
 
 **AI** telegram bot by _**digfusion**_. 
 
+Try out our **free product** with **unlimited uses**.
+
 **Open-Source** project.
 
 ## Models used
