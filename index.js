@@ -10,7 +10,7 @@ const DavidID = 923690530;
 
 let usersData = [];
 
-let aboutText = `<b>Что такое Нейросетивичок?</b>\n<blockquote><b>Бот</b>, разработанный компанией <b>digfusion</b> с использованием <b>Hugging Face API</b>.</blockquote>\n\n<b>Модели искусственного интеллекта:</b>\n<blockquote><b>• OpenGPT 4o</b> - Текстовые запросы\n<b>• OpenGPT 4o</b> - Генерация изображений\n<b>• Instant Video</b> - Генерация видео</blockquote>\n\n<b>Отсутствие ограничений:</b>\n<blockquote><b>Главное преимущество digfusion - Открытость.</b>\n\nМы становимся лучше и не лимитируем количество запросов.</blockquote>`;
+let aboutText = `<b>Что такое Нейросетивичок?</b>\n<blockquote><b>Бот</b>, разработанный компанией <b>digfusion</b> с использованием <b>Hugging Face API</b>.</blockquote>\n\n<b>Модели искусственного интеллекта:</b>\n<blockquote><b>• Llama 3.1 70b</b> - Текстовые запросы\n<b>• FLUX.1 DEV</b> - Генерация изображений\n<b>• Instant Video</b> - Генерация видео</blockquote>\n\n<b>Отсутствие ограничений:</b>\n<blockquote><b>Главное преимущество digfusion - Открытость.</b>\n• Пользуйтесь <b>Нейросетивичком</b>, сколько захотите.\n• <b>Неограниченное</b> количество запросов <b>на все модели</b>.</blockquote>`;
 
 bot.setMyCommands([
   { command: "/start", description: "Перезапуск" },
@@ -114,7 +114,7 @@ async function getResponse(chatId, userPrompt) {
   try {
     const client = await Client.connect("orionai/llama-3.1-70b-demo");
     const result = await client.predict("/predict", {
-      user_message: `${dataAboutUser.lastTextResponse != `` ? `Your previous answer: ${dataAboutUser.lastTextResponse} My new question: ${userPrompt} (dont use * in answer except in math)` : `${userPrompt} (dont use * in answer except in math)`}`,
+      user_message: `${dataAboutUser.lastTextResponse != `` ? `Your previous answer: ${dataAboutUser.lastTextResponse} My new question: ${userPrompt} (if you use ** replace it with html tag <b></b>)` : `${userPrompt} (if you use ** replace it with html tag <b></b>) (structurize your answers, make them look good) (if you use * replace it with •)`}`,
     });
 
     bot.sendChatAction(chatId, "typing");
@@ -142,7 +142,7 @@ async function getImage(chatId, userPrompt) {
     const client = await Client.connect("K00B404/FLUX.1-Dev-Serverless-darn");
     const result = await client.predict("/query", {
       prompt: userPrompt,
-      is_negative: `(deformed, distorted, disfigured), poorly drawn, bad anatomy, wrong anatomy, extra limb, missing limb, floating limbs, (mutated hands and fingers), disconnected limbs, mutation, mutated, ugly, disgusting, blurry, amputation, misspellings, typos`,
+      is_negative: `(deformed, distorted, disfigured), poorly drawn, bad anatomy, wrong anatomy, extra limb, missing limb, floating limbs, (mutated hands and fingers), disconnected limbs, mutation, mutated, ugly, disgusting, blurry, amputation, misspellings, typos, unrealistic, bad looking, low quality`,
       steps: 35,
       cfg_scale: 7,
       sampler: "DPM++ 2M Karras",
@@ -206,16 +206,16 @@ async function changeMode(chatId, mode = `changeTo`) {
     switch (mode) {
       case `changeTo`:
         await bot
-          .sendMessage(chatId, `Выберите режим генерации ✅<blockquote><b></b></blockquote>`, {
+          .sendMessage(chatId, `Выберите режим генерации ✅\n\n<b>Модели искусственного интеллекта:</b>\n<blockquote><b>• Llama 3.1 70b</b> - Текстовые запросы\n<b>• FLUX.1 DEV</b> - Генерация изображений\n<b>• Instant Video</b> - Генерация видео</blockquote>`, {
             parse_mode: `HTML`,
             disable_web_page_preview: true,
             reply_markup: {
               inline_keyboard: [
                 [
                   { text: `Текст`, callback_data: `changeModeResponse` },
-                  { text: `Изображения`, callback_data: `changeModeImage` },
                   { text: `Видео`, callback_data: `changeModeVideo` },
                 ],
+                [{ text: `Изображения`, callback_data: `changeModeImage` }],
               ],
             },
           })
