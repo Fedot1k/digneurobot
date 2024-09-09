@@ -6,7 +6,9 @@
 
 ## Models used
 
-• **OpenGPT 4o** - Text Chat **&** Image Generating
+• **Llama 3.1 70b** - Text Chat
+
+• **OpenGPT 4o** - Image Generating
 
 • **Instant Video** - Video Generating
 
