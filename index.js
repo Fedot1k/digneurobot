@@ -10,21 +10,18 @@ const DavidID = 923690530;
 
 let usersData = [];
 
-let aboutText = `<b>Что такое Нейросетивичок?</b>\n<blockquote><b>Бот</b>, разработанный компанией <b>digfusion</b> с использованием <b>Hugging Face API</b>.</blockquote>\n\n<b>Модели искусственного интеллекта:</b>\n<blockquote><b>• Llama 3.1 70b</b> - Текстовые запросы\n<b>• FLUX.1 DEV</b> - Генерация изображений\n<b>• Instant Video</b> - Генерация видео</blockquote>\n\n<b>Отсутствие ограничений:</b>\n<blockquote><b>Главное преимущество digfusion - Открытость.</b>\n• Пользуйтесь <b>Нейросетивичком</b>, сколько захотите.\n• <b>Неограниченное</b> количество запросов <b>на все модели</b>.</blockquote>`;
-
 bot.setMyCommands([
   { command: "/start", description: "Перезапуск" },
   { command: "/reset", description: "Сброс контекста" },
   { command: "/mode", description: "Режим генерации" },
   { command: "/profile", description: "Профиль" },
-  { command: "/about", description: "О боте" },
 ]);
 
 async function intro(chatId) {
   const dataAboutUser = usersData.find((obj) => obj.chatId == chatId);
 
   try {
-    await bot.sendMessage(chatId, `Добрo пожаловать в <b>Нейросетивичок</b>. Чтобы задать вопрос, напишите его в чате.\n\n<b>Команды:</b>\n<blockquote>/start - Перезапуск\n/reset - Сброс контекста\n/mode - Режим генерации\n/profile - Профиль\n/about - О боте</blockquote>`, {
+    await bot.sendMessage(chatId, `Добрo пожаловать в <b>Нейросетивичок</b>. Чтобы задать вопрос, напишите его в чате.\n\n<b>Команды:</b>\n<blockquote>/start - Перезапуск\n/reset - Сброс контекста\n/mode - Режим генерации\n/profile - Профиль</blockquote>`, {
       parse_mode: `HTML`,
       disable_web_page_preview: true,
       reply_markup: {
@@ -37,24 +34,58 @@ async function intro(chatId) {
   }
 }
 
-async function profile(chatId) {
+async function profile(chatId, editSend = `send`) {
   const dataAboutUser = usersData.find((obj) => obj.chatId == chatId);
 
   try {
-    await bot.sendMessage(chatId, `👤 <b><i>Профиль</i> • </b><code>${dataAboutUser.chatId}</code>\n\n<b>Статистика запросов:</b><blockquote>Текст: <b>${dataAboutUser.statistic.response} шт</b>\nИзображения: <b>${dataAboutUser.statistic.image} шт</b>\nВидео: <b>${dataAboutUser.statistic.video} шт</b></blockquote>`, {
-      parse_mode: `HTML`,
-      disable_web_page_preview: true,
-      reply_markup: {
-        inline_keyboard: [
-          [
-            {
-              text: `Поддержка 💭`,
-              url: `https://t.me/digfusionsupport`,
+    switch (editSend) {
+      case `send`:
+        await bot
+          .sendMessage(chatId, `👤 <b><i>Профиль</i> • </b><code>${dataAboutUser.chatId}</code>\n\n<b>Статистика запросов:</b><blockquote>Текст: <b>${dataAboutUser.statistic.response} шт</b>\nИзображения: <b>${dataAboutUser.statistic.image} шт</b>\nВидео: <b>${dataAboutUser.statistic.video} шт</b></blockquote>`, {
+            parse_mode: `HTML`,
+            disable_web_page_preview: true,
+            reply_markup: {
+              inline_keyboard: [
+                [
+                  { text: `О боте`, callback_data: `about` },
+                  { text: `digfusion ❔`, callback_data: `digfusion` },
+                ],
+                [
+                  {
+                    text: `Поддержка 💭`,
+                    url: `https://t.me/digfusionsupport`,
+                  },
+                ],
+              ],
             },
-          ],
-        ],
-      },
-    });
+          })
+          .then((message) => {
+            dataAboutUser.profileMessageId = message.message_id;
+          });
+        break;
+      case `edit`:
+        await bot.editMessageText(`👤 <b><i>Профиль</i> • </b><code>${dataAboutUser.chatId}</code>\n\n<b>Статистика запросов:</b><blockquote>Текст: <b>${dataAboutUser.statistic.response} шт</b>\nИзображения: <b>${dataAboutUser.statistic.image} шт</b>\nВидео: <b>${dataAboutUser.statistic.video} шт</b></blockquote>`, {
+          parse_mode: `HTML`,
+          chat_id: chatId,
+          message_id: dataAboutUser.profileMessageId,
+          disable_web_page_preview: true,
+          reply_markup: {
+            inline_keyboard: [
+              [
+                { text: `О боте`, callback_data: `about` },
+                { text: `digfusion ❔`, callback_data: `digfusion` },
+              ],
+              [
+                {
+                  text: `Поддержка 💭`,
+                  url: `https://t.me/digfusionsupport`,
+                },
+              ],
+            ],
+          },
+        });
+        break;
+    }
   } catch (error) {
     errorData(chatId, dataAboutUser.login, `${String(error)}`);
   }
@@ -64,17 +95,15 @@ async function about(chatId) {
   const dataAboutUser = usersData.find((obj) => obj.chatId == chatId);
 
   try {
-    await bot
-      .sendMessage(chatId, aboutText, {
-        parse_mode: `HTML`,
-        disable_web_page_preview: true,
-        reply_markup: {
-          inline_keyboard: [[{ text: `digfusion ❔`, callback_data: `digfusion` }]],
-        },
-      })
-      .then((message) => {
-        dataAboutUser.messageId = message.message_id;
-      });
+    await bot.editMessageText(`<b>Что такое Нейросетивичок?</b>\n<blockquote><b>Бот</b>, разработанный компанией <b>digfusion</b> с использованием <b>Hugging Face API.</b></blockquote>\n\n<b>Отсутствие ограничений:</b>\n<blockquote><b>Главное преимущество digfusion - Открытость.</b>\n• Пользуйтесь <b>Нейросетивичком</b>, сколько захотите.\n• <b>Неограниченное</b> количество запросов <b>на все модели.</b></blockquote>\n\nЧто такое <b>Контекст?</b>\n<blockquote><b>Бот</b> умеет запоминать <b>историю сообщений</b> при <b>текстовых запросах.</b> Это помогает вести и дополнять диалог в рамках <b>одной темы.</b></blockquote>`, {
+      parse_mode: `HTML`,
+      chat_id: chatId,
+      message_id: dataAboutUser.profileMessageId,
+      disable_web_page_preview: true,
+      reply_markup: {
+        inline_keyboard: [[{ text: `⬅️Назад`, callback_data: `profile` }]],
+      },
+    });
   } catch (error) {
     errorData(chatId, dataAboutUser.login, `${String(error)}`);
   }
@@ -87,18 +116,10 @@ async function digfusion(chatId) {
     await bot.editMessageText(`<b><i>❔digfusion • О нас</i></b><blockquote>Компания <b><i>digfusion</i></b> - <b>начинающий стартап,</b> разрабатывающий <b>свои приложения</b> и предоставляющий услуги по <b>созданию чат-ботов</b> различных типов!\n\nПросмотреть все <b>наши проекты, реальные отзывы, каталог услуг</b> и <b>прочую информацию о компании</b> можно в нашем <b>Telegram канале</b> и <b>боте-консультанте!</b></blockquote>\n\n<b><a href="https://t.me/digfusion">digfusion | инфо</a> • <a href="https://t.me/digfusionbot">digfusion | услуги</a></b>`, {
       parse_mode: "html",
       chat_id: chatId,
-      message_id: dataAboutUser.messageId,
+      message_id: dataAboutUser.profileMessageId,
       disable_web_page_preview: true,
       reply_markup: {
-        inline_keyboard: [
-          [
-            { text: "⬅️Назад", callback_data: "about" },
-            {
-              text: "Поддержка 💭",
-              url: "https://t.me/digfusionsupport",
-            },
-          ],
-        ],
+        inline_keyboard: [[{ text: `⬅️Назад`, callback_data: `profile` }]],
       },
     });
   } catch (error) {
@@ -109,15 +130,15 @@ async function digfusion(chatId) {
 async function getResponse(chatId, userPrompt) {
   const dataAboutUser = usersData.find((obj) => obj.chatId == chatId);
 
-  bot.sendChatAction(chatId, "typing");
-
   try {
     const client = await Client.connect("orionai/llama-3.1-70b-demo");
     const result = await client.predict("/predict", {
-      user_message: `${dataAboutUser.lastTextResponse != `` ? `Your previous answer: ${dataAboutUser.lastTextResponse} My new question: ${userPrompt} (if you use ** replace it with html tag <b></b>)` : `${userPrompt} (if you use ** replace it with html tag <b></b>) (structurize your answers, make them look good) (if you use * replace it with •)`}`,
+      user_message: `${dataAboutUser.lastTextResponse != `` ? `Your previous answer: ${dataAboutUser.lastTextResponse} My new question: ` : ``} ${userPrompt} (System prompt: You are a helpful, powerful, minimalistic, informative AI Telegram Bot. Generate answers with correct formatting for Telegram. Think, answer, structurize like ChatGPT-4.)`,
     });
 
     bot.sendChatAction(chatId, "typing");
+
+    bot.deleteMessage(chatId, dataAboutUser.requestMessageId);
 
     await bot.sendMessage(chatId, `${result.data}`, {
       parse_mode: `HTML`,
@@ -136,8 +157,6 @@ async function getResponse(chatId, userPrompt) {
 async function getImage(chatId, userPrompt) {
   const dataAboutUser = usersData.find((obj) => obj.chatId == chatId);
 
-  bot.sendChatAction(chatId, "upload_photo");
-
   try {
     const client = await Client.connect("K00B404/FLUX.1-Dev-Serverless-darn");
     const result = await client.predict("/query", {
@@ -154,6 +173,8 @@ async function getImage(chatId, userPrompt) {
 
     bot.sendChatAction(chatId, "upload_photo");
 
+    bot.deleteMessage(chatId, dataAboutUser.requestMessageId);
+
     await bot.sendPhoto(chatId, result.data[0].url);
   } catch (error) {
     errorData(chatId, dataAboutUser.login, `${String(error)}`);
@@ -163,8 +184,6 @@ async function getImage(chatId, userPrompt) {
 async function getVideo(chatId, userPrompt) {
   const dataAboutUser = usersData.find((obj) => obj.chatId == chatId);
 
-  bot.sendChatAction(chatId, "record_video");
-
   try {
     const space = await Client.connect("KingNish/Instant-Video");
     const result = await space.predict("/instant_video", {
@@ -173,7 +192,45 @@ async function getVideo(chatId, userPrompt) {
 
     bot.sendChatAction(chatId, "upload_video");
 
+    bot.deleteMessage(chatId, dataAboutUser.requestMessageId);
+
     await bot.sendVideo(chatId, result.data[0].video.url);
+  } catch (error) {
+    errorData(chatId, dataAboutUser.login, `${String(error)}`);
+  }
+}
+
+async function processingRequest(chatId) {
+  const dataAboutUser = usersData.find((obj) => obj.chatId == chatId);
+
+  try {
+    await bot
+      .sendMessage(chatId, `Ваш запрос обрабатывается...`, {
+        parse_mode: `HTML`,
+        disable_web_page_preview: true,
+        reply_markup: {
+          inline_keyboard: [[]],
+        },
+      })
+      .then((message) => {
+        dataAboutUser.requestMessageId = message.message_id;
+      });
+  } catch (error) {
+    errorData(chatId, dataAboutUser.login, `${String(error)}`);
+  }
+}
+
+async function failedRequest(chatId) {
+  const dataAboutUser = usersData.find((obj) => obj.chatId == chatId);
+
+  try {
+    await bot.sendMessage(chatId, `Возникла техническая ошибка ❌<blockquote><b>Пожалуйста, попробуйте снова.</b></blockquote>`, {
+      parse_mode: `HTML`,
+      disable_web_page_preview: true,
+      reply_markup: {
+        inline_keyboard: [[]],
+      },
+    });
   } catch (error) {
     errorData(chatId, dataAboutUser.login, `${String(error)}`);
   }
@@ -212,22 +269,22 @@ async function changeMode(chatId, mode = `changeTo`) {
             reply_markup: {
               inline_keyboard: [
                 [
-                  { text: `Текст`, callback_data: `changeModeResponse` },
-                  { text: `Видео`, callback_data: `changeModeVideo` },
+                  { text: `${dataAboutUser.userAction == `response` ? `• Текст •` : `Текст`}`, callback_data: `changeModeResponse` },
+                  { text: `${dataAboutUser.userAction == `video` ? `• Видео •` : `Видео`}`, callback_data: `changeModeVideo` },
                 ],
-                [{ text: `Изображения`, callback_data: `changeModeImage` }],
+                [{ text: `${dataAboutUser.userAction == `image` ? `• Изображения •` : `Изображения`}`, callback_data: `changeModeImage` }],
               ],
             },
           })
           .then((message) => {
-            dataAboutUser.messageId = message.message_id;
+            dataAboutUser.requestMessageId = message.message_id;
           });
         break;
       case `changeModeResponse`:
         await bot.editMessageText(`Генерация текста ✅`, {
           parse_mode: `HTML`,
           chat_id: chatId,
-          message_id: dataAboutUser.messageId,
+          message_id: dataAboutUser.requestMessageId,
           disable_web_page_preview: true,
           reply_markup: {
             inline_keyboard: [[]],
@@ -239,7 +296,7 @@ async function changeMode(chatId, mode = `changeTo`) {
         await bot.editMessageText(`Генерация изображений ✅`, {
           parse_mode: `HTML`,
           chat_id: chatId,
-          message_id: dataAboutUser.messageId,
+          message_id: dataAboutUser.requestMessageId,
           disable_web_page_preview: true,
           reply_markup: {
             inline_keyboard: [[]],
@@ -251,7 +308,7 @@ async function changeMode(chatId, mode = `changeTo`) {
         await bot.editMessageText(`Генерация видео ✅`, {
           parse_mode: `HTML`,
           chat_id: chatId,
-          message_id: dataAboutUser.messageId,
+          message_id: dataAboutUser.requestMessageId,
           disable_web_page_preview: true,
           reply_markup: {
             inline_keyboard: [[]],
@@ -277,7 +334,8 @@ async function StartAll() {
           usersData.push({
             chatId: chatId,
             login: message.from.first_name,
-            messageId: null,
+            profileMessageId: null,
+            requestMessageId: null,
             userAction: `response`,
             lastTextResponse: ``,
 
@@ -298,24 +356,30 @@ async function StartAll() {
             changeMode(chatId);
             break;
           case `/profile`:
-            profile(chatId);
-            break;
-          case `/about`:
-            about(chatId, `send`);
+            profile(chatId, `send`);
             break;
         }
         if (Array.from(text)[0] != "/") {
           switch (dataAboutUser.userAction) {
             case `response`:
               dataAboutUser.statistic.response++;
+              processingRequest(chatId).then(() => {
+                bot.sendChatAction(chatId, "typing");
+              });
               getResponse(chatId, text);
               break;
             case `image`:
               dataAboutUser.statistic.image++;
+              processingRequest(chatId).then(() => {
+                bot.sendChatAction(chatId, "upload_photo");
+              });
               getImage(chatId, text);
               break;
             case `video`:
               dataAboutUser.statistic.video++;
+              processingRequest(chatId).then(() => {
+                bot.sendChatAction(chatId, "record_video");
+              });
               getVideo(chatId, text);
               break;
           }
@@ -345,11 +409,13 @@ async function StartAll() {
         case `changeModeVideo`:
           changeMode(chatId, data);
           break;
+        case `profile`:
+          profile(chatId, `edit`);
+          break;
         case `digfusion`:
           digfusion(chatId);
           break;
         case `about`:
-          bot.deleteMessage(chatId, dataAboutUser.messageId);
           about(chatId);
           break;
       }
