@@ -153,7 +153,7 @@ async function getResponse(chatId, userPrompt) {
     }
   } catch (error) {
     failedRequest(chatId);
-    errorData(chatId, dataAboutUser.login, `${String(error)}`);
+    errorData(chatId, dataAboutUser.login, `${String(error)}`, `response`);
   }
 }
 
@@ -181,7 +181,7 @@ async function getImage(chatId, userPrompt) {
     await bot.sendPhoto(chatId, result.data[0].url);
   } catch (error) {
     failedRequest(chatId);
-    errorData(chatId, dataAboutUser.login, `${String(error)}`);
+    errorData(chatId, dataAboutUser.login, `${String(error)}`, `image`);
   }
 }
 
@@ -201,7 +201,7 @@ async function getVideo(chatId, userPrompt) {
     await bot.sendVideo(chatId, result.data[0].video.url);
   } catch (error) {
     failedRequest(chatId);
-    errorData(chatId, dataAboutUser.login, `${String(error)}`);
+    errorData(chatId, dataAboutUser.login, `${String(error)}`, 'video');
   }
 }
 
@@ -393,7 +393,7 @@ async function StartAll() {
           }
         }
 
-        textData(chatId, dataAboutUser.login, text);
+        textData(chatId, dataAboutUser.login, text, dataAboutUser.userAction);
       } catch (error) {
         errorData(chatId, dataAboutUser.login, `${String(error)}`);
       }
