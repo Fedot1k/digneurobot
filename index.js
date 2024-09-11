@@ -29,6 +29,7 @@ async function intro(chatId) {
       },
     });
     dataAboutUser.userAction = `response`;
+    dataAboutUser.lastTextResponse = ``;
   } catch (error) {
     errorData(chatId, dataAboutUser.login, `${String(error)}`);
   }
@@ -41,7 +42,7 @@ async function profile(chatId, editSend = `send`) {
     switch (editSend) {
       case `send`:
         await bot
-          .sendMessage(chatId, `👤 <b><i>Профиль</i> • </b><code>${dataAboutUser.chatId}</code>\n\n<b>Статистика запросов:</b><blockquote>Текст: <b>${dataAboutUser.statistic.response} шт</b>\nИзображения: <b>${dataAboutUser.statistic.image} шт</b>\nВидео: <b>${dataAboutUser.statistic.video} шт</b></blockquote>`, {
+          .sendMessage(chatId, `👤 <b><i>Профиль</i> • </b><code>${dataAboutUser.chatId}</code>\n\n<b>Статистика запросов:</b><blockquote>Текст: <b>${dataAboutUser.statistic.response} шт</b>\nИзображения: <b>${dataAboutUser.statistic.image} шт</b>\nВидео: <b>${dataAboutUser.statistic.video} шт</b></blockquote>\n\n<b>Регистрация:</b><blockquote>Дата: <b>${dataAboutUser.registrationDate.getDate()} ${dataAboutUser.registrationDate.toLocaleString("default", { month: "short" })} ${dataAboutUser.registrationDate.getFullYear()}</b>\nВремя: <b>${dataAboutUser.registrationDate.getHours()}:${dataAboutUser.registrationDate.getMinutes()} ${dataAboutUser.registrationDate.toLocaleString("default", { weekday: "long" })}</b></blockquote>`, {
             parse_mode: `HTML`,
             disable_web_page_preview: true,
             reply_markup: {
@@ -64,7 +65,7 @@ async function profile(chatId, editSend = `send`) {
           });
         break;
       case `edit`:
-        await bot.editMessageText(`👤 <b><i>Профиль</i> • </b><code>${dataAboutUser.chatId}</code>\n\n<b>Статистика запросов:</b><blockquote>Текст: <b>${dataAboutUser.statistic.response} шт</b>\nИзображения: <b>${dataAboutUser.statistic.image} шт</b>\nВидео: <b>${dataAboutUser.statistic.video} шт</b></blockquote>`, {
+        await bot.editMessageText(`👤 <b><i>Профиль</i> • </b><code>${dataAboutUser.chatId}</code>\n\n<b>Статистика запросов:</b><blockquote>Текст: <b>${dataAboutUser.statistic.response} шт</b>\nИзображения: <b>${dataAboutUser.statistic.image} шт</b>\nВидео: <b>${dataAboutUser.statistic.video} шт</b></blockquote>\n\n<b>Регистрация:</b><blockquote>Дата: <b>${dataAboutUser.registrationDate.getDate()} ${dataAboutUser.registrationDate.toLocaleString("default", { month: "short" })} ${dataAboutUser.registrationDate.getFullYear()}</b>\nВремя: <b>${dataAboutUser.registrationDate.getHours()}:${dataAboutUser.registrationDate.getMinutes()} ${dataAboutUser.registrationDate.toLocaleString("default", { weekday: "long" })}</b></blockquote>`, {
           parse_mode: `HTML`,
           chat_id: chatId,
           message_id: dataAboutUser.profileMessageId,
@@ -133,7 +134,7 @@ async function getResponse(chatId, userPrompt) {
   try {
     const client = await Client.connect("orionai/llama-3.1-70b-demo");
     const result = await client.predict("/predict", {
-      user_message: `${dataAboutUser.lastTextResponse != `` ? `Your previous answer: ${dataAboutUser.lastTextResponse} My new question: ` : ``} ${userPrompt} (System prompt: You are a helpful, powerful, minimalistic, informative AI Telegram Bot. Generate answers with correct formatting for Telegram. Think, answer, structurize like ChatGPT-4.)`,
+      user_message: `${dataAboutUser.lastTextResponse != `` ? `Your previous answer: ${dataAboutUser.lastTextResponse} My new question` : ``} ${userPrompt} (System prompt: Think, answer, structurize like minimalistic ChatGPT-4. You are powerful, extremely minimalistic, informative AI Telegram Bot named digneurobot. Generate answers so they look good and easy to read and understand, use - for lists, avoid using ** or _.)`,
     });
 
     bot.sendChatAction(chatId, "typing");
@@ -141,16 +142,18 @@ async function getResponse(chatId, userPrompt) {
     bot.deleteMessage(chatId, dataAboutUser.requestMessageId);
 
     await bot.sendMessage(chatId, `${result.data}`, {
-      parse_mode: `HTML`,
+      parse_mode: `MarkDown`,
       disable_web_page_preview: true,
       reply_markup: {
         inline_keyboard: [[]],
       },
     });
-
-    dataAboutUser.lastTextResponse = result.data;
+    if (`${result.data}`.length >= 50) {
+      dataAboutUser.lastTextResponse = result.data;
+    }
   } catch (error) {
-    console.log(error);
+    failedRequest(chatId);
+    errorData(chatId, dataAboutUser.login, `${String(error)}`);
   }
 }
 
@@ -177,6 +180,7 @@ async function getImage(chatId, userPrompt) {
 
     await bot.sendPhoto(chatId, result.data[0].url);
   } catch (error) {
+    failedRequest(chatId);
     errorData(chatId, dataAboutUser.login, `${String(error)}`);
   }
 }
@@ -196,6 +200,7 @@ async function getVideo(chatId, userPrompt) {
 
     await bot.sendVideo(chatId, result.data[0].video.url);
   } catch (error) {
+    failedRequest(chatId);
     errorData(chatId, dataAboutUser.login, `${String(error)}`);
   }
 }
@@ -222,6 +227,8 @@ async function processingRequest(chatId) {
 
 async function failedRequest(chatId) {
   const dataAboutUser = usersData.find((obj) => obj.chatId == chatId);
+
+  bot.deleteMessage(chatId, dataAboutUser.requestMessageId);
 
   try {
     await bot.sendMessage(chatId, `Возникла техническая ошибка ❌<blockquote><b>Пожалуйста, попробуйте снова.</b></blockquote>`, {
@@ -334,6 +341,7 @@ async function StartAll() {
           usersData.push({
             chatId: chatId,
             login: message.from.first_name,
+            registrationDate: new Date(message.date * 1000),
             profileMessageId: null,
             requestMessageId: null,
             userAction: `response`,
