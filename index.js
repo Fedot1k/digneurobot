@@ -42,7 +42,7 @@ async function profile(chatId, editSend = `send`) {
     switch (editSend) {
       case `send`:
         await bot
-          .sendMessage(chatId, `👤 <b><i>Профиль</i> • </b><code>${dataAboutUser.chatId}</code>\n\n<b>Статистика запросов:</b><blockquote>Текст: <b>${dataAboutUser.statistic.response} шт</b>\nИзображения: <b>${dataAboutUser.statistic.image} шт</b>\nВидео: <b>${dataAboutUser.statistic.video} шт</b></blockquote>\n\n<b>Регистрация:</b><blockquote>Дата: <b>${dataAboutUser.registrationDate.getDate()} ${dataAboutUser.registrationDate.toLocaleString("default", { month: "short" })} ${dataAboutUser.registrationDate.getFullYear()}</b>\nВремя: <b>${dataAboutUser.registrationDate.getHours()}:${dataAboutUser.registrationDate.getMinutes()} ${dataAboutUser.registrationDate.toLocaleString("default", { weekday: "long" })}</b></blockquote>`, {
+          .sendMessage(chatId, `👤 <b><i>Профиль</i> • </b><code>${dataAboutUser.chatId}</code>\n\n<b>История запросов:</b><blockquote><b>${dataAboutUser.lastRequest != `` ? dataAboutUser.lastRequest : `No data`}</b></blockquote>\n\n<b>Статистика запросов:</b><blockquote>Текст: <b>${dataAboutUser.statistic.response} шт</b>\nИзображения: <b>${dataAboutUser.statistic.image} шт</b>\nВидео: <b>${dataAboutUser.statistic.video} шт</b></blockquote>`, {
             parse_mode: `HTML`,
             disable_web_page_preview: true,
             reply_markup: {
@@ -65,7 +65,7 @@ async function profile(chatId, editSend = `send`) {
           });
         break;
       case `edit`:
-        await bot.editMessageText(`👤 <b><i>Профиль</i> • </b><code>${dataAboutUser.chatId}</code>\n\n<b>Статистика запросов:</b><blockquote>Текст: <b>${dataAboutUser.statistic.response} шт</b>\nИзображения: <b>${dataAboutUser.statistic.image} шт</b>\nВидео: <b>${dataAboutUser.statistic.video} шт</b></blockquote>\n\n<b>Регистрация:</b><blockquote>Дата: <b>${dataAboutUser.registrationDate.getDate()} ${dataAboutUser.registrationDate.toLocaleString("default", { month: "short" })} ${dataAboutUser.registrationDate.getFullYear()}</b>\nВремя: <b>${dataAboutUser.registrationDate.getHours()}:${dataAboutUser.registrationDate.getMinutes()} ${dataAboutUser.registrationDate.toLocaleString("default", { weekday: "long" })}</b></blockquote>`, {
+        await bot.editMessageText(`👤 <b><i>Профиль</i> • </b><code>${dataAboutUser.chatId}</code>\n\n<b>Статистика запросов:</b><blockquote>Текст: <b>${dataAboutUser.statistic.response} шт</b>\nИзображения: <b>${dataAboutUser.statistic.image} шт</b>\nВидео: <b>${dataAboutUser.statistic.video} шт</b></blockquote>\n\n<b>История:</b><blockquote>Последний запрос: <b>${dataAboutUser.lastRequest != `` ? dataAboutUser.lastRequest : `No data`}</b></blockquote>`, {
           parse_mode: `HTML`,
           chat_id: chatId,
           message_id: dataAboutUser.profileMessageId,
@@ -96,7 +96,7 @@ async function about(chatId) {
   const dataAboutUser = usersData.find((obj) => obj.chatId == chatId);
 
   try {
-    await bot.editMessageText(`<b>Что такое Нейросетивичок?</b>\n<blockquote><b>Бот</b>, разработанный компанией <b>digfusion</b> с использованием <b>Hugging Face API.</b></blockquote>\n\n<b>Отсутствие ограничений:</b>\n<blockquote><b>Главное преимущество digfusion - Открытость.</b>\n• Пользуйтесь <b>Нейросетивичком</b>, сколько захотите.\n• <b>Неограниченное</b> количество запросов <b>на все модели.</b></blockquote>\n\nЧто такое <b>Контекст?</b>\n<blockquote><b>Бот</b> умеет запоминать <b>историю сообщений</b> при <b>текстовых запросах.</b> Это помогает вести и дополнять диалог в рамках <b>одной темы.</b></blockquote>`, {
+    await bot.editMessageText(`<b>Что такое Нейросетивичок?</b><blockquote><b>Бот</b>, разработанный компанией <b>digfusion</b> с использованием <b>Hugging Face API.</b></blockquote>\n\n<b>Главные преимущества:</b><blockquote>• <b>Отсутствие</b> ограничений. <b>Неограниченное</b> количество запросов <b>на все модели.</b>\n\n• <b>Скорость</b> работы. <b>Мощные модели</b> позволяют <b>Нейросетивичку</b> мгновенно отвечать на ваши <b>запросы.</b></blockquote>\n\nЧто такое <b>Контекст?</b><blockquote><b>Бот</b> умеет запоминать <b>историю сообщений</b> при <b>текстовых запросах.</b> Это помогает вести и дополнять диалог в рамках <b>одной темы.</b></blockquote>`, {
       parse_mode: `HTML`,
       chat_id: chatId,
       message_id: dataAboutUser.profileMessageId,
@@ -124,7 +124,7 @@ async function digfusion(chatId) {
       },
     });
   } catch (error) {
-    errorData(chatId, `dataAboutUser.login`, `${String(error)}`);
+    errorData(chatId, dataAboutUser.login, `${String(error)}`);
   }
 }
 
@@ -200,8 +200,8 @@ async function getVideo(chatId, userPrompt) {
 
     await bot.sendVideo(chatId, result.data[0].video.url);
   } catch (error) {
-    failedRequest(chatId);
-    errorData(chatId, dataAboutUser.login, `${String(error)}`, 'video');
+    serverOverload(chatId);
+    errorData(chatId, dataAboutUser.login, `${String(error)}`, `video`);
   }
 }
 
@@ -232,6 +232,24 @@ async function failedRequest(chatId) {
 
   try {
     await bot.sendMessage(chatId, `Возникла техническая ошибка ❌<blockquote><b>Пожалуйста, попробуйте снова.</b></blockquote>`, {
+      parse_mode: `HTML`,
+      disable_web_page_preview: true,
+      reply_markup: {
+        inline_keyboard: [[]],
+      },
+    });
+  } catch (error) {
+    errorData(chatId, dataAboutUser.login, `${String(error)}`);
+  }
+}
+
+async function serverOverload(chatId) {
+  const dataAboutUser = usersData.find((obj) => obj.chatId == chatId);
+
+  bot.deleteMessage(chatId, dataAboutUser.requestMessageId);
+
+  try {
+    await bot.sendMessage(chatId, `Сервер перегружен ❌<blockquote><b>Попробуйте позже.</b></blockquote>`, {
       parse_mode: `HTML`,
       disable_web_page_preview: true,
       reply_markup: {
@@ -341,10 +359,10 @@ async function StartAll() {
           usersData.push({
             chatId: chatId,
             login: message.from.first_name,
-            registrationDate: new Date(message.date * 1000),
             profileMessageId: null,
             requestMessageId: null,
             userAction: `response`,
+            lastRequest: ``,
             lastTextResponse: ``,
 
             statistic: { response: 0, image: 0, video: 0 },
@@ -368,6 +386,7 @@ async function StartAll() {
             break;
         }
         if (Array.from(text)[0] != "/") {
+          `${text.length <= 2000 ? dataAboutUser.lastRequest = text : ``}`
           switch (dataAboutUser.userAction) {
             case `response`:
               dataAboutUser.statistic.response++;
@@ -430,7 +449,7 @@ async function StartAll() {
 
       buttonData(chatId, dataAboutUser.login, data);
     } catch (error) {
-      errorData(chatId, `dataAboutUser.login`, `${String(error)}`);
+      errorData(chatId, dataAboutUser.login, `${String(error)}`);
     }
   });
 }
