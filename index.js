@@ -38,11 +38,19 @@ async function intro(chatId) {
 async function profile(chatId, editSend = `send`) {
   const dataAboutUser = usersData.find((obj) => obj.chatId == chatId);
 
+  let historyText = ``;
+
+  if (dataAboutUser.lastRequests != null) {
+    for (let i = 0; i < dataAboutUser.lastRequests.length; i++) {
+      historyText += `${i + 1}. ${dataAboutUser.lastRequests[dataAboutUser.lastRequests.length - 1 - i]}\n`;
+    }
+  }
+
   try {
     switch (editSend) {
       case `send`:
         await bot
-          .sendMessage(chatId, `👤 <b><i>Профиль</i> • </b><code>${dataAboutUser.chatId}</code>\n\n<b>История запросов:</b><blockquote><b>${dataAboutUser.lastRequest != `` ? dataAboutUser.lastRequest : `No data`}</b></blockquote>\n\n<b>Статистика запросов:</b><blockquote>Текст: <b>${dataAboutUser.statistic.response} шт</b>\nИзображения: <b>${dataAboutUser.statistic.image} шт</b>\nВидео: <b>${dataAboutUser.statistic.video} шт</b></blockquote>`, {
+          .sendMessage(chatId, `👤 <b><i>Профиль</i> • </b><code>${dataAboutUser.chatId}</code>\n\n<b>История запросов:</b><blockquote><b>${historyText != `` ? historyText : `<i>No requests yet</i>`}</b></blockquote>\n\n<b>Статистика запросов:</b><blockquote>Текст: <b>${dataAboutUser.statistic.response} шт</b>\nИзображения: <b>${dataAboutUser.statistic.image} шт</b>\nВидео: <b>${dataAboutUser.statistic.video} шт</b></blockquote>`, {
             parse_mode: `HTML`,
             disable_web_page_preview: true,
             reply_markup: {
@@ -362,7 +370,7 @@ async function StartAll() {
             profileMessageId: null,
             requestMessageId: null,
             userAction: `response`,
-            lastRequest: ``,
+            lastRequests: [],
             lastTextResponse: ``,
 
             statistic: { response: 0, image: 0, video: 0 },
@@ -386,7 +394,12 @@ async function StartAll() {
             break;
         }
         if (Array.from(text)[0] != "/") {
-          `${text.length <= 2000 ? dataAboutUser.lastRequest = text : ``}`
+          `${dataAboutUser.lastRequests != null ? dataAboutUser.lastRequests.push(text.slice(0, 200)) : ``}`;
+
+          if (dataAboutUser.lastRequests != null && dataAboutUser.lastRequests.length > 5) {
+            dataAboutUser.lastRequests.shift();
+          }
+
           switch (dataAboutUser.userAction) {
             case `response`:
               dataAboutUser.statistic.response++;
@@ -414,7 +427,7 @@ async function StartAll() {
 
         textData(chatId, dataAboutUser.login, text, dataAboutUser.userAction);
       } catch (error) {
-        errorData(chatId, dataAboutUser.login, `${String(error)}`);
+        errorData(chatId, message.from.first_name, `${String(error)}`);
       }
     }
   });
