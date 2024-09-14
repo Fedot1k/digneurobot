@@ -5,8 +5,6 @@ import { TelegramToken } from "./config.js";
 import { textData, buttonData, errorData } from "./watcher.js";
 
 const bot = new TelegramBot(TelegramToken, { polling: true });
-const FedotID = 870204479;
-const DavidID = 923690530;
 
 let usersData = [];
 
@@ -50,7 +48,7 @@ async function profile(chatId, editSend = `send`) {
     switch (editSend) {
       case `send`:
         await bot
-          .sendMessage(chatId, `👤 <b><i>Профиль</i> • </b><code>${dataAboutUser.chatId}</code>\n\n<b>История запросов:</b><blockquote><b>${historyText != `` ? historyText : `<i>No requests yet</i>`}</b></blockquote>\n\n<b>Статистика запросов:</b><blockquote>Текст: <b>${dataAboutUser.statistic.response} шт</b>\nИзображения: <b>${dataAboutUser.statistic.image} шт</b>\nВидео: <b>${dataAboutUser.statistic.video} шт</b></blockquote>`, {
+          .sendMessage(chatId, `👤 <b><i>Профиль</i> • </b><code>${dataAboutUser.chatId}</code> 🔍\n\n<b>История запросов:</b><blockquote><b>${historyText != `` ? historyText : `<i>No requests yet</i>\n`}</b></blockquote>\n<b>Статистика запросов:</b><blockquote>Текст: <b>${dataAboutUser.statistic.response} шт</b>\nИзображения: <b>${dataAboutUser.statistic.image} шт</b>\nВидео: <b>${dataAboutUser.statistic.video} шт</b></blockquote>`, {
             parse_mode: `HTML`,
             disable_web_page_preview: true,
             reply_markup: {
@@ -73,7 +71,7 @@ async function profile(chatId, editSend = `send`) {
           });
         break;
       case `edit`:
-        await bot.editMessageText(`👤 <b><i>Профиль</i> • </b><code>${dataAboutUser.chatId}</code>\n\n<b>Статистика запросов:</b><blockquote>Текст: <b>${dataAboutUser.statistic.response} шт</b>\nИзображения: <b>${dataAboutUser.statistic.image} шт</b>\nВидео: <b>${dataAboutUser.statistic.video} шт</b></blockquote>\n\n<b>История:</b><blockquote>Последний запрос: <b>${dataAboutUser.lastRequest != `` ? dataAboutUser.lastRequest : `No data`}</b></blockquote>`, {
+        await bot.editMessageText(`👤 <b><i>Профиль</i> • </b><code>${dataAboutUser.chatId}</code> 🔍\n\n<b>История запросов:</b><blockquote><b>${historyText != `` ? historyText : `<i>No requests yet</i>\n`}</b></blockquote>\n<b>Статистика запросов:</b><blockquote>Текст: <b>${dataAboutUser.statistic.response} шт</b>\nИзображения: <b>${dataAboutUser.statistic.image} шт</b>\nВидео: <b>${dataAboutUser.statistic.video} шт</b></blockquote>`, {
           parse_mode: `HTML`,
           chat_id: chatId,
           message_id: dataAboutUser.profileMessageId,
@@ -357,78 +355,76 @@ async function changeMode(chatId, mode = `changeTo`) {
 
 async function StartAll() {
   bot.on(`text`, async (message) => {
-    if (FedotID == message.chat.id || DavidID == message.chat.id) {
-      let text = message.text;
-      let chatId = message.chat.id;
-      let userMessage = message.message_id;
+    let text = message.text;
+    let chatId = message.chat.id;
+    let userMessage = message.message_id;
 
-      try {
-        if (!usersData.find((obj) => obj.chatId == chatId)) {
-          usersData.push({
-            chatId: chatId,
-            login: message.from.first_name,
-            profileMessageId: null,
-            requestMessageId: null,
-            userAction: `response`,
-            lastRequests: [],
-            lastTextResponse: ``,
+    try {
+      if (!usersData.find((obj) => obj.chatId == chatId)) {
+        usersData.push({
+          chatId: chatId,
+          login: message.from.first_name,
+          profileMessageId: null,
+          requestMessageId: null,
+          userAction: `response`,
+          lastRequests: [],
+          lastTextResponse: ``,
 
-            statistic: { response: 0, image: 0, video: 0 },
-          });
-        }
-
-        const dataAboutUser = usersData.find((obj) => obj.chatId == chatId);
-
-        switch (text) {
-          case `/start`:
-            intro(chatId);
-            break;
-          case `/reset`:
-            resetTextChat(chatId);
-            break;
-          case `/mode`:
-            changeMode(chatId);
-            break;
-          case `/profile`:
-            profile(chatId, `send`);
-            break;
-        }
-        if (Array.from(text)[0] != "/") {
-          `${dataAboutUser.lastRequests != null ? dataAboutUser.lastRequests.push(text.slice(0, 200)) : ``}`;
-
-          if (dataAboutUser.lastRequests != null && dataAboutUser.lastRequests.length > 5) {
-            dataAboutUser.lastRequests.shift();
-          }
-
-          switch (dataAboutUser.userAction) {
-            case `response`:
-              dataAboutUser.statistic.response++;
-              processingRequest(chatId).then(() => {
-                bot.sendChatAction(chatId, "typing");
-              });
-              getResponse(chatId, text);
-              break;
-            case `image`:
-              dataAboutUser.statistic.image++;
-              processingRequest(chatId).then(() => {
-                bot.sendChatAction(chatId, "upload_photo");
-              });
-              getImage(chatId, text);
-              break;
-            case `video`:
-              dataAboutUser.statistic.video++;
-              processingRequest(chatId).then(() => {
-                bot.sendChatAction(chatId, "record_video");
-              });
-              getVideo(chatId, text);
-              break;
-          }
-        }
-
-        textData(chatId, dataAboutUser.login, text, dataAboutUser.userAction);
-      } catch (error) {
-        errorData(chatId, message.from.first_name, `${String(error)}`);
+          statistic: { response: 0, image: 0, video: 0 },
+        });
       }
+
+      const dataAboutUser = usersData.find((obj) => obj.chatId == chatId);
+
+      switch (text) {
+        case `/start`:
+          intro(chatId);
+          break;
+        case `/reset`:
+          resetTextChat(chatId);
+          break;
+        case `/mode`:
+          changeMode(chatId);
+          break;
+        case `/profile`:
+          profile(chatId, `send`);
+          break;
+      }
+      if (Array.from(text)[0] != "/") {
+        `${dataAboutUser.lastRequests != null ? dataAboutUser.lastRequests.push(text.slice(0, 200)) : ``}`;
+
+        if (dataAboutUser.lastRequests != null && dataAboutUser.lastRequests.length > 5) {
+          dataAboutUser.lastRequests.shift();
+        }
+
+        switch (dataAboutUser.userAction) {
+          case `response`:
+            dataAboutUser.statistic.response++;
+            processingRequest(chatId).then(() => {
+              bot.sendChatAction(chatId, "typing");
+            });
+            getResponse(chatId, text);
+            break;
+          case `image`:
+            dataAboutUser.statistic.image++;
+            processingRequest(chatId).then(() => {
+              bot.sendChatAction(chatId, "upload_photo");
+            });
+            getImage(chatId, text);
+            break;
+          case `video`:
+            dataAboutUser.statistic.video++;
+            processingRequest(chatId).then(() => {
+              bot.sendChatAction(chatId, "record_video");
+            });
+            getVideo(chatId, text);
+            break;
+        }
+      }
+
+      textData(chatId, dataAboutUser.login, text, dataAboutUser.userAction);
+    } catch (error) {
+      errorData(chatId, message.from.first_name, `${String(error)}`);
     }
   });
 
