@@ -1,8 +1,16 @@
 import TelegramBot from "node-telegram-bot-api";
+import cron from "node-cron";
 import { Client } from "@gradio/client";
 
-import { TelegramToken } from "./config.js";
+import { initializeApp } from "firebase/app";
+import { getDatabase, ref, set, get } from "firebase/database";
+
+import { TelegramToken, firebaseConfig } from "./config.js";
 import { textData, buttonData, errorData } from "./watcher.js";
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+const dataRef = ref(db);
 
 const bot = new TelegramBot(TelegramToken, { polling: true });
 
@@ -354,6 +362,13 @@ async function changeMode(chatId, mode = `changeTo`) {
 }
 
 async function StartAll() {
+  get(dataRef).then((snapshot) => {
+    if (snapshot.exists()) {
+      const dataFromDB = snapshot.val();
+      usersData = dataFromDB.usersData || [];
+    }
+  });
+
   bot.on(`text`, async (message) => {
     let text = message.text;
     let chatId = message.chat.id;
@@ -423,6 +438,10 @@ async function StartAll() {
       }
 
       textData(chatId, dataAboutUser.login, text, dataAboutUser.userAction);
+
+      set(dataRef, {
+        usersData: usersData,
+      });
     } catch (error) {
       errorData(chatId, message.from.first_name, `${String(error)}`);
     }
@@ -457,9 +476,19 @@ async function StartAll() {
       }
 
       buttonData(chatId, dataAboutUser.login, data);
+
+      set(dataRef, {
+        usersData: usersData,
+      });
     } catch (error) {
       errorData(chatId, dataAboutUser.login, `${String(error)}`);
     }
+  });
+
+  cron.schedule(`* */3 * * *`, function () {
+    set(dataRef, {
+      usersData: usersData,
+    });
   });
 }
 
