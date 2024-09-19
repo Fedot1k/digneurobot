@@ -148,7 +148,7 @@ async function getResponse(chatId, userPrompt) {
   try {
     const client = await Client.connect("orionai/llama-3.1-70b-demo");
     const result = await client.predict("/predict", {
-      user_message: `${dataAboutUser.lastTextResponse != `` ? `Your previous answer: ${dataAboutUser.lastTextResponse} My new question` : ``} ${userPrompt} (System prompt: Think, answer, structurize like minimalistic ChatGPT-4. You are powerful, extremely minimalistic, informative AI Telegram Bot named Нейросетивичок. Generate answers so they look good and easy to read and understand, use - for lists.)`,
+      user_message: `${dataAboutUser.lastTextResponse != `` ? `Your previous answer: ${dataAboutUser.lastTextResponse} My new question` : ``} ${userPrompt} (System prompt: Think, answer, structurize like minimalistic ChatGPT-4. You are powerful, informative AI Telegram Bot named Нейросетивичок. Generate answers so they look good and easy to read and understand, use - for lists.)`,
     });
 
     bot.sendChatAction(chatId, "typing");
