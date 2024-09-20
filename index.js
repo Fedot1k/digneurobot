@@ -46,7 +46,7 @@ async function profile(chatId, editSend = `send`) {
 
   let historyText = ``;
 
-  if (dataAboutUser.lastRequests != null) {
+  if (dataAboutUser.lastRequests) {
     for (let i = 0; i < dataAboutUser.lastRequests.length; i++) {
       historyText += `${i + 1}. ${dataAboutUser.lastRequests[dataAboutUser.lastRequests.length - 1 - i]}\n`;
     }
@@ -162,7 +162,7 @@ async function getResponse(chatId, userPrompt) {
         inline_keyboard: [[]],
       },
     });
-    if (`${result.data}`.length >= 50) {
+    if (result.data && `${result.data}`.length >= 50) {
       dataAboutUser.lastTextResponse = result.data;
     }
   } catch (error) {
@@ -405,10 +405,10 @@ async function StartAll() {
           profile(chatId, `send`);
           break;
       }
-      if (Array.from(text)[0] != "/") {
-        `${dataAboutUser.lastRequests != null ? dataAboutUser.lastRequests.push(text.slice(0, 200)) : ``}`;
+      if (text && Array.from(text)[0] != "/") {
+        `${dataAboutUser.lastRequests ? dataAboutUser.lastRequests.push(text.slice(0, 200)) : ``}`;
 
-        if (dataAboutUser.lastRequests != null && dataAboutUser.lastRequests.length > 5) {
+        if (dataAboutUser.lastRequests && dataAboutUser.lastRequests.length > 5) {
           dataAboutUser.lastRequests.shift();
         }
 
