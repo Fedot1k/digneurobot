@@ -1,21 +1,22 @@
-import TelegramBot from "node-telegram-bot-api";
+import TelegramBot from "node-telegram-bot-api"; // Telegram, Time, HuggingFace API
 import cron from "node-cron";
 import { Client } from "@gradio/client";
 
-import { initializeApp } from "firebase/app";
+import { initializeApp } from "firebase/app"; // FirebaseDB
 import { getDatabase, ref, set, get } from "firebase/database";
 
-import { TelegramToken, firebaseConfig } from "./config.js";
+import { TelegramToken, firebaseConfig } from "./config.js"; // Tokens (secret), Surround Watcher (debugging)
 import { textData, buttonData, errorData } from "./watcher.js";
 
-const app = initializeApp(firebaseConfig);
+const app = initializeApp(firebaseConfig); // FirebaseDB setup
 const db = getDatabase(app);
 const dataRef = ref(db);
 
-const bot = new TelegramBot(TelegramToken, { polling: true });
+const bot = new TelegramBot(TelegramToken, { polling: true }); // bot setup
 
 let usersData = [];
 
+// bot menu commands
 bot.setMyCommands([
   { command: "/start", description: "Перезапуск" },
   { command: "/reset", description: "Сброс контекста" },
@@ -23,6 +24,7 @@ bot.setMyCommands([
   { command: "/profile", description: "Профиль" },
 ]);
 
+// start message
 async function intro(chatId) {
   const dataAboutUser = usersData.find((obj) => obj.chatId == chatId);
 
@@ -41,11 +43,13 @@ async function intro(chatId) {
   }
 }
 
+// profile message
 async function profile(chatId, editSend = `send`) {
   const dataAboutUser = usersData.find((obj) => obj.chatId == chatId);
 
   let historyText = ``;
 
+  // user request history
   if (dataAboutUser.lastRequests) {
     for (let i = 0; i < dataAboutUser.lastRequests.length; i++) {
       historyText += `${i + 1}. ${dataAboutUser.lastRequests[dataAboutUser.lastRequests.length - 1 - i]}\n`;
@@ -106,6 +110,7 @@ async function profile(chatId, editSend = `send`) {
   }
 }
 
+// about bot message
 async function about(chatId) {
   const dataAboutUser = usersData.find((obj) => obj.chatId == chatId);
 
@@ -124,6 +129,7 @@ async function about(chatId) {
   }
 }
 
+// digfusion info message
 async function digfusion(chatId) {
   const dataAboutUser = usersData.find((obj) => obj.chatId == chatId);
 
@@ -142,9 +148,11 @@ async function digfusion(chatId) {
   }
 }
 
+// text request processing
 async function getResponse(chatId, userPrompt) {
   const dataAboutUser = usersData.find((obj) => obj.chatId == chatId);
 
+  // requesting text generation from HuggingFace API
   try {
     const client = await Client.connect("orionai/llama-3.1-70b-demo");
     const result = await client.predict("/predict", {
@@ -171,9 +179,11 @@ async function getResponse(chatId, userPrompt) {
   }
 }
 
+// image request processing
 async function getImage(chatId, userPrompt) {
   const dataAboutUser = usersData.find((obj) => obj.chatId == chatId);
 
+  // requesting image generation from HuggingFace API
   try {
     const client = await Client.connect("K00B404/FLUX.1-Dev-Serverless-darn");
     const result = await client.predict("/query", {
@@ -199,9 +209,11 @@ async function getImage(chatId, userPrompt) {
   }
 }
 
+// video request processing
 async function getVideo(chatId, userPrompt) {
   const dataAboutUser = usersData.find((obj) => obj.chatId == chatId);
 
+  // requesting video generation from HuggingFace API
   try {
     const space = await Client.connect("KingNish/Instant-Video");
     const result = await space.predict("/instant_video", {
@@ -219,6 +231,7 @@ async function getVideo(chatId, userPrompt) {
   }
 }
 
+// request processing message
 async function processingRequest(chatId) {
   const dataAboutUser = usersData.find((obj) => obj.chatId == chatId);
 
@@ -239,6 +252,7 @@ async function processingRequest(chatId) {
   }
 }
 
+// request error message
 async function failedRequest(chatId) {
   const dataAboutUser = usersData.find((obj) => obj.chatId == chatId);
 
@@ -257,6 +271,7 @@ async function failedRequest(chatId) {
   }
 }
 
+// server overload message (video)
 async function serverOverload(chatId) {
   const dataAboutUser = usersData.find((obj) => obj.chatId == chatId);
 
@@ -275,6 +290,7 @@ async function serverOverload(chatId) {
   }
 }
 
+// text context reset + message
 async function resetTextChat(chatId) {
   const dataAboutUser = usersData.find((obj) => obj.chatId == chatId);
 
@@ -295,6 +311,7 @@ async function resetTextChat(chatId) {
   }
 }
 
+// changing AI mode (text, image, video)
 async function changeMode(chatId, mode = `changeTo`) {
   const dataAboutUser = usersData.find((obj) => obj.chatId == chatId);
 
@@ -361,7 +378,9 @@ async function changeMode(chatId, mode = `changeTo`) {
   }
 }
 
+// master function
 async function StartAll() {
+  // getting data from FirebaseDB
   get(dataRef).then((snapshot) => {
     if (snapshot.exists()) {
       const dataFromDB = snapshot.val();
@@ -369,11 +388,13 @@ async function StartAll() {
     }
   });
 
+  // user message recognition
   bot.on(`text`, async (message) => {
     let text = message.text;
     let chatId = message.chat.id;
     let userMessage = message.message_id;
 
+    // adding variables for new users
     try {
       if (!usersData.find((obj) => obj.chatId == chatId)) {
         usersData.push({
@@ -405,6 +426,8 @@ async function StartAll() {
           profile(chatId, `send`);
           break;
       }
+
+      // filling request history (last 5 or less)
       if (text && Array.from(text)[0] != "/") {
         `${dataAboutUser.lastRequests ? dataAboutUser.lastRequests.push(text.slice(0, 200)) : ``}`;
 
@@ -412,6 +435,7 @@ async function StartAll() {
           dataAboutUser.lastRequests.shift();
         }
 
+        // saving stats and answering to user request
         switch (dataAboutUser.userAction) {
           case `response`:
             dataAboutUser.statistic.response++;
@@ -437,8 +461,10 @@ async function StartAll() {
         }
       }
 
+      // Surround Watcher (text)
       textData(chatId, dataAboutUser.login, text, dataAboutUser.userAction);
 
+      // sending data to FirebaseDB
       set(dataRef, {
         usersData: usersData,
       });
@@ -447,6 +473,7 @@ async function StartAll() {
     }
   });
 
+  // pressed button recognition
   bot.on(`callback_query`, async (query) => {
     let chatId = query.message.chat.id;
     let data = query.data;
@@ -475,8 +502,10 @@ async function StartAll() {
           break;
       }
 
+      // Surround Watcher (button)
       buttonData(chatId, dataAboutUser.login, data);
 
+      // sending data to FirebaseDB
       set(dataRef, {
         usersData: usersData,
       });
@@ -485,6 +514,7 @@ async function StartAll() {
     }
   });
 
+  // sending data to FirebaseDB (every 3 hours)
   cron.schedule(`* */3 * * *`, function () {
     set(dataRef, {
       usersData: usersData,
