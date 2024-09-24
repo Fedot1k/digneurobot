@@ -10,7 +10,7 @@
 
 ## Models used
 
-• **Llama 3.1 70b** - Text Chat
+• **GRIN MOE** - Text Chat
 
 • **FLUX.1 DEV** - Image Generating
 
