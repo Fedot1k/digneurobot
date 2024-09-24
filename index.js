@@ -154,9 +154,9 @@ async function getResponse(chatId, userPrompt) {
 
   // requesting text generation from HuggingFace API
   try {
-    const client = await Client.connect("orionai/llama-3.1-70b-demo");
-    const result = await client.predict("/predict", {
-      user_message: `${dataAboutUser.lastTextResponse != `` ? `Your previous answer: ${dataAboutUser.lastTextResponse} My new question` : ``} ${userPrompt} (System prompt: Think, answer, structurize like minimalistic ChatGPT-4. You are powerful, informative AI Telegram Bot named Нейросетивичок. Generate answers so they look good and easy to read and understand, use - for lists.)`,
+    const client = await Client.connect("GRIN-MoE-Demo/GRIN-MoE");
+    const result = await client.predict("/chat", {
+      message: `${dataAboutUser.lastTextResponse != `` ? `Your previous answer: ${dataAboutUser.lastTextResponse} My new question` : ``} ${userPrompt}`,
     });
 
     bot.sendChatAction(chatId, "typing");
