@@ -319,7 +319,7 @@ async function changeMode(chatId, mode = `changeTo`) {
     switch (mode) {
       case `changeTo`:
         await bot
-          .sendMessage(chatId, `Выберите режим генерации ✅\n\n<b>Модели искусственного интеллекта:</b>\n<blockquote><b>• Llama 3.1 70b</b> - Текстовые запросы\n<b>• FLUX.1 DEV</b> - Генерация изображений\n<b>• Instant Video</b> - Генерация видео</blockquote>`, {
+          .sendMessage(chatId, `Выберите режим генерации ✅\n\n<b>Модели искусственного интеллекта:</b>\n<blockquote><b>• GRIN MOE</b> - Текстовые запросы\n<b>• FLUX.1 DEV</b> - Генерация изображений\n<b>• Instant Video</b> - Генерация видео</blockquote>`, {
             parse_mode: `HTML`,
             disable_web_page_preview: true,
             reply_markup: {
