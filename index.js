@@ -154,22 +154,25 @@ async function getResponse(chatId, userPrompt) {
 
   // requesting text generation from HuggingFace API
   try {
-    const client = await Client.connect("GRIN-MoE-Demo/GRIN-MoE");
-    const result = await client.predict("/chat", {
-      message: `${dataAboutUser.lastTextResponse != `` ? `Your previous answer: ${dataAboutUser.lastTextResponse} My new question` : ``} ${userPrompt}`,
+    const client = await Client.connect("Qwen/Qwen2.5-72B-Instruct");
+    const result = await client.predict("/model_chat", {
+      query: userPrompt,
+      history: [],
+      system: "You are Qwen, created by Alibaba Cloud. You are a helpful assistant.",
     });
 
     bot.sendChatAction(chatId, "typing");
 
     bot.deleteMessage(chatId, dataAboutUser.requestMessageId);
 
-    await bot.sendMessage(chatId, `${result.data}`, {
+    await bot.sendMessage(chatId, `${result.data[1][0][1]}`, {
       parse_mode: `MarkDown`,
       disable_web_page_preview: true,
       reply_markup: {
         inline_keyboard: [[]],
       },
     });
+
     if (result.data && `${result.data}`.length >= 50) {
       dataAboutUser.lastTextResponse = result.data;
     }
@@ -319,7 +322,7 @@ async function changeMode(chatId, mode = `changeTo`) {
     switch (mode) {
       case `changeTo`:
         await bot
-          .sendMessage(chatId, `Выберите режим генерации ✅\n\n<b>Модели искусственного интеллекта:</b>\n<blockquote><b>• GRIN MOE</b> - Текстовые запросы\n<b>• FLUX.1 DEV</b> - Генерация изображений\n<b>• Instant Video</b> - Генерация видео</blockquote>`, {
+          .sendMessage(chatId, `Выберите режим генерации ✅\n\n<b>Модели искусственного интеллекта:</b>\n<blockquote><b>• QWEN 2.5</b> - Текстовые запросы\n<b>• FLUX.1 DEV</b> - Генерация изображений\n<b>• Instant Video</b> - Генерация видео</blockquote>`, {
             parse_mode: `HTML`,
             disable_web_page_preview: true,
             reply_markup: {
