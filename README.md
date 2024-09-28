@@ -10,7 +10,7 @@
 
 ## Models used
 
-• **GRIN MOE** - Text Chat
+• **QWEN 2.5** - Text Chat
 
 • **FLUX.1 DEV** - Image Generating
 
