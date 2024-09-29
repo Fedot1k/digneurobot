@@ -315,8 +315,6 @@ async function resetTextChat(chatId) {
         inline_keyboard: [[]],
       },
     });
-
-    dataAboutUser.userAction = `response`;
   } catch (error) {
     errorData(chatId, dataAboutUser.login, `${String(error)}`);
   }
