@@ -37,7 +37,7 @@ async function intro(chatId) {
       },
     });
     dataAboutUser.userAction = `response`;
-    dataAboutUser.lastTextResponse = ``;
+    dataAboutUser.textContext = [];
   } catch (error) {
     errorData(chatId, dataAboutUser.login, `${String(error)}`);
   }
@@ -156,9 +156,9 @@ async function getResponse(chatId, userPrompt) {
   try {
     const client = await Client.connect("Qwen/Qwen2.5-72B-Instruct");
     const result = await client.predict("/model_chat", {
-      query: userPrompt,
+      query: `${dataAboutUser.textContext ? `Our chat history: ${dataAboutUser.textContext} My new question` : ``} ${userPrompt}`,
       history: [],
-      system: "You are Qwen, created by Alibaba Cloud. You are a helpful assistant.",
+      system: "You are Нейросетивичок, created by digfusion. You are a helpful assistant. All your answers are original. Never use emojis.",
     });
 
     bot.sendChatAction(chatId, "typing");
@@ -173,12 +173,18 @@ async function getResponse(chatId, userPrompt) {
       },
     });
 
-    if (result.data && `${result.data}`.length >= 50) {
-      dataAboutUser.lastTextResponse = result.data;
+    if (result.data[1][0][1] && dataAboutUser.textContext) {
+      dataAboutUser.textContext.push(userPrompt);
+      dataAboutUser.textContext.push(result.data[1][0][1]);
+    }
+
+    if (dataAboutUser.textContext && dataAboutUser.textContext.length > 4) {
+      dataAboutUser.textContext.shift();
     }
   } catch (error) {
     failedRequest(chatId);
     errorData(chatId, dataAboutUser.login, `${String(error)}`, `response`);
+    console.log(error);
   }
 }
 
@@ -209,6 +215,7 @@ async function getImage(chatId, userPrompt) {
   } catch (error) {
     failedRequest(chatId);
     errorData(chatId, dataAboutUser.login, `${String(error)}`, `image`);
+    console.log(error);
   }
 }
 
@@ -231,6 +238,7 @@ async function getVideo(chatId, userPrompt) {
   } catch (error) {
     serverOverload(chatId);
     errorData(chatId, dataAboutUser.login, `${String(error)}`, `video`);
+    console.log(error);
   }
 }
 
@@ -298,7 +306,7 @@ async function resetTextChat(chatId) {
   const dataAboutUser = usersData.find((obj) => obj.chatId == chatId);
 
   try {
-    dataAboutUser.lastTextResponse = ``;
+    dataAboutUser.textContext = [];
 
     await bot.sendMessage(chatId, `Контекст успешно сброшен ✅<blockquote><b>Напишите свой вопрос в чате.</b></blockquote>`, {
       parse_mode: `HTML`,
@@ -407,7 +415,7 @@ async function StartAll() {
           requestMessageId: null,
           userAction: `response`,
           lastRequests: [],
-          lastTextResponse: ``,
+          textContext: [],
 
           statistic: { response: 0, image: 0, video: 0 },
         });
