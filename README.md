@@ -12,7 +12,7 @@
 
 • **QWEN 2.5** - Text Chat
 
-• **FLUX.1 DEV** - Image Generating
+• **FLUX.1** - Image Generating
 
 • **Instant Video** - Video Generating
 
