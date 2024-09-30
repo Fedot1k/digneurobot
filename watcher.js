@@ -1,8 +1,8 @@
 import TelegramBot from "node-telegram-bot-api";
 
-import { WatcherToken } from "./config.js";
+import { config } from "./config.js";
 
-const watcher = new TelegramBot(WatcherToken, { polling: false });
+const watcher = new TelegramBot(config.Tokens[2], { polling: false });
 const FedotID = 870204479;
 
 async function textData(chatId, firstName, text, userAction) {

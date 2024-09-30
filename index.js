@@ -5,14 +5,14 @@ import { Client } from "@gradio/client";
 import { initializeApp } from "firebase/app"; // FirebaseDB
 import { getDatabase, ref, set, get } from "firebase/database";
 
-import { TelegramToken, firebaseConfig } from "./config.js"; // Tokens (secret), Surround Watcher (debugging)
+import { config, firebaseConfig } from "./config.js"; // Tokens (secret), Surround Watcher (debugging)
 import { textData, buttonData, errorData } from "./watcher.js";
 
 const app = initializeApp(firebaseConfig); // FirebaseDB setup
 const db = getDatabase(app);
 const dataRef = ref(db);
 
-const bot = new TelegramBot(TelegramToken, { polling: true }); // bot setup
+const bot = new TelegramBot(config.Tokens[0], { polling: true }); // bot setup
 
 let usersData = [];
 
@@ -115,7 +115,7 @@ async function about(chatId) {
   const dataAboutUser = usersData.find((obj) => obj.chatId == chatId);
 
   try {
-    await bot.editMessageText(`<b>Что такое Нейросетивичок?</b><blockquote><b>Бот</b>, разработанный компанией <b>digfusion</b> с использованием <b>Hugging Face API.</b></blockquote>\n\n<b>Главные преимущества:</b><blockquote><b>• Быстрые ответы</b>\nМощный искусственный интеллект способен отвечать на вопросы с невероятной скоростью.\n\n<b>• Неограниченные запросы</b>\nОтсутствие лимитов на все функции открывает доступ к безграничному пользованию.\n\n<b>• Абсолютно бесплатно</b>\nВзаимодействие с ботом не требует подписки и других платных услуг.</blockquote>\n\nЧто такое <b>Контекст?</b><blockquote><b>Бот</b> умеет запоминать <b>историю сообщений</b> при <b>текстовых запросах.</b> Это помогает вести и дополнять диалог в рамках <b>одной темы.</b></blockquote>`, {
+    await bot.editMessageText(`<b>Что такое Нейросетивичок?</b><blockquote><b>Бот</b>, разработанный компанией <b>digfusion</b> с использованием <b>Hugging Face API.</b></blockquote>\n\n<b>Главные преимущества:</b><blockquote><b>• Быстрые ответы</b>\nМощный искусственный интеллект способен отвечать на вопросы с <b>невероятной скоростью.</b>\n\n<b>• Неограниченные запросы</b>\nОтсутствие лимитов на все функции открывает доступ к <b>безграничному пользованию.</b>\n\n<b>• Абсолютно бесплатно</b>\nВзаимодействие с ботом <b>не требует подписки</b> и других платных услуг.</blockquote>\n\nЧто такое <b>Контекст?</b><blockquote><b>Бот</b> умеет запоминать <b>историю сообщений</b> при <b>текстовых запросах.</b> Это помогает вести и дополнять диалог в рамках <b>одной темы.</b></blockquote>`, {
       parse_mode: `HTML`,
       chat_id: chatId,
       message_id: dataAboutUser.profileMessageId,
@@ -328,7 +328,7 @@ async function changeMode(chatId, mode = `changeTo`) {
     switch (mode) {
       case `changeTo`:
         await bot
-          .sendMessage(chatId, `Выберите режим генерации ✅\n\n<b>Модели искусственного интеллекта:</b>\n<blockquote><b>• QWEN 2.5</b> - Текстовые запросы\n<b>• FLUX.1 DEV</b> - Генерация изображений\n<b>• Instant Video</b> - Генерация видео</blockquote>`, {
+          .sendMessage(chatId, `Выберите режим генерации ✅\n\n<b>Модели искусственного интеллекта:</b>\n<blockquote><b>• QWEN 2.5</b> - Текстовые запросы\n<b>• FLUX.1</b> - Генерация изображений\n<b>• Instant Video</b> - Генерация видео</blockquote>`, {
             parse_mode: `HTML`,
             disable_web_page_preview: true,
             reply_markup: {
