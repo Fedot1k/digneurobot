@@ -12,7 +12,7 @@ const app = initializeApp(firebaseConfig); // FirebaseDB setup
 const db = getDatabase(app);
 const dataRef = ref(db);
 
-const bot = new TelegramBot(config.Tokens[0], { polling: true }); // bot setup
+const bot = new TelegramBot(config.Tokens[1], { polling: true }); // bot setup
 
 let usersData = [];
 
@@ -158,7 +158,7 @@ async function getResponse(chatId, userPrompt) {
     const result = await client.predict("/model_chat", {
       query: `${dataAboutUser.textContext ? `Our chat history: ${dataAboutUser.textContext} My new question` : ``} ${userPrompt}`,
       history: [],
-      system: "You are Нейросетивичок, created by digfusion. You are a helpful AI Telegram assistant. All your answers are original. Never use emojis.",
+      system: "You are Нейросетивичок, created by digfusion. You are a helpful AI Telegram assistant. All your answers are original. Never use emojis and math formatting.",
     });
 
     bot.sendChatAction(chatId, "typing");
