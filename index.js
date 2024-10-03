@@ -158,7 +158,7 @@ async function getResponse(chatId, userPrompt) {
     const result = await client.predict("/model_chat", {
       query: `${dataAboutUser.textContext ? `Our chat history: ${dataAboutUser.textContext} My new question` : ``} ${userPrompt}`,
       history: [],
-      system: "You are Нейросетивичок, created by digfusion. You are a helpful assistant. All your answers are original. Never use emojis.",
+      system: "You are Нейросетивичок, created by digfusion. You are a helpful AI Telegram assistant. All your answers are original. Never use emojis.",
     });
 
     bot.sendChatAction(chatId, "typing");
