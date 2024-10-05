@@ -422,10 +422,15 @@ async function StartAll() {
       const dataAboutUser = usersData.find((obj) => obj.chatId == chatId);
 
       // digmathbot integration
-      if (text.includes(`/start searchBy`)) {
-        match = text.match(/^\/start searchBy(.*)$/);
+      if (text.includes("/start promptBy")) {
+        let result = text.match(/promptBy(\w+)/);
 
-        getResponse(chatId, match[1]);
+        intro(chatId);
+        dataAboutUser.statistic.response++;
+        processingRequest(chatId).then(() => {
+          bot.sendChatAction(chatId, "typing");
+        });
+        getResponse(chatId, result[1]);
       }
 
       switch (text) {
