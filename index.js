@@ -423,10 +423,11 @@ async function StartAll() {
 
       // digmathbot integration
       if (text.includes("/start promptBy")) {
-        let result = text.match(/promptBy(\w+)/);
-
-        intro(chatId);
-        dataAboutUser.statistic.response++;
+        let result = decodeURIComponent(text).match(/promptBy(.+)/);
+        
+        intro(chatId).then(() => {
+          dataAboutUser.statistic.response++;
+        });
         processingRequest(chatId).then(() => {
           bot.sendChatAction(chatId, "typing");
         });
