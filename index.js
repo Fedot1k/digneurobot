@@ -2,17 +2,10 @@ import TelegramBot from "node-telegram-bot-api"; // Telegram, Time, HuggingFace 
 import cron from "node-cron";
 import { Client } from "@gradio/client";
 
-import { initializeApp } from "firebase/app"; // FirebaseDB
-import { getDatabase, ref, set, get } from "firebase/database";
-
-import { config, firebaseConfig } from "./config.js"; // Tokens (secret), Surround Watcher (debugging)
+import { config } from "./config.js"; // Tokens (secret), Surround Watcher (debugging)
 import { textData, buttonData, errorData } from "./watcher.js";
 
-const app = initializeApp(firebaseConfig); // FirebaseDB setup
-const db = getDatabase(app);
-const dataRef = ref(db);
-
-const bot = new TelegramBot(config.Tokens[1], { polling: true }); // bot setup
+const bot = new TelegramBot(config.Tokens[0], { polling: true }); // bot setup
 
 let usersData = [];
 
@@ -389,13 +382,10 @@ async function changeMode(chatId, mode = `changeTo`) {
 
 // master function
 async function StartAll() {
-  // getting data from FirebaseDB
-  get(dataRef).then((snapshot) => {
-    if (snapshot.exists()) {
-      const dataFromDB = snapshot.val();
-      usersData = dataFromDB.usersData || [];
-    }
-  });
+  // getting data from DB.json
+  if (fs.readFileSync("DB.json") != "[]" && fs.readFileSync("DB.json") != "") {
+    usersData = JSON.parse(fs.readFileSync("DB.json")).usersData || null;
+  }
 
   // user message recognition
   bot.on(`text`, async (message) => {
@@ -424,7 +414,7 @@ async function StartAll() {
       // digmathbot integration
       if (text.includes("/start promptBy")) {
         let result = decodeURIComponent(text).match(/promptBy(.+)/);
-        
+
         intro(chatId).then(() => {
           dataAboutUser.statistic.response++;
         });

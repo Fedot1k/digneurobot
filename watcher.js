@@ -5,7 +5,7 @@ import { config } from "./config.js";
 const watcher = new TelegramBot(config.Tokens[2], { polling: false });
 const FedotID = 870204479;
 
-async function textData(chatId, firstName, text, userAction) {
+export async function textData(chatId, firstName, text, userAction) {
   await watcher.sendMessage(FedotID, `<b><a href="https://t.me/digneurobot">✨</a> Нейросетивичок | Text ⚪️\n\n<a href="tg://user?id=${chatId}">${firstName}</a>  |  </b><code>${chatId}</code>\n<blockquote><i>${text} (${userAction})</i></blockquote>`, {
     parse_mode: "html",
     disable_notification: true,
@@ -13,7 +13,7 @@ async function textData(chatId, firstName, text, userAction) {
   });
 }
 
-async function buttonData(chatId, firstName, data) {
+export async function buttonData(chatId, firstName, data) {
   await watcher.sendMessage(FedotID, `<b><a href="https://t.me/digneurobot">✨</a> Нейросетивичок | Button 🟢\n\n<a href="tg://user?id=${chatId}">${firstName}</a>  |  </b><code>${chatId}</code>\n<blockquote><b>[${data}]</b></blockquote>`, {
     parse_mode: "html",
     disable_notification: true,
@@ -21,7 +21,7 @@ async function buttonData(chatId, firstName, data) {
   });
 }
 
-async function errorData(chatId, firstName, text, userAction = ``) {
+export async function errorData(chatId, firstName, text, userAction = ``) {
   await watcher.sendMessage(FedotID, `<b><a href="https://t.me/digneurobot">✨</a> Нейросетивичок | Error 🔴\n\n<a href="tg://user?id=${chatId}">${firstName}</a>  |  </b><code>${chatId}</code>\n<blockquote><i>${text}${userAction != `` ? ` (${userAction})` : ``}</i></blockquote>`, {
     parse_mode: "html",
     disable_notification: true,
@@ -29,6 +29,12 @@ async function errorData(chatId, firstName, text, userAction = ``) {
   });
 }
 
-export { textData };
-export { buttonData };
-export { errorData };
+export async function databaseData(chatId, dataToSend) {
+  fs.writeFile("DB.json", JSON.stringify(dataToSend), (err) => {
+    if (err) throw err;
+    bot.sendDocument(FedotID, "./DB.json", {
+      caption: `<b><a href="https://t.me/digneurobot">✨</a> Нейросетивичок | Data ⚪️</b>`,
+      parse_mode: "html",
+    });
+  });
+}
