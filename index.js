@@ -41,20 +41,11 @@ async function intro(chatId) {
 async function profile(chatId, editSend = `send`) {
   const dataAboutUser = usersData.find((obj) => obj.chatId == chatId);
 
-  let historyText = ``;
-
-  // user request history
-  if (dataAboutUser.lastRequests) {
-    for (let i = 0; i < dataAboutUser.lastRequests.length; i++) {
-      historyText += `${i + 1}. ${dataAboutUser.lastRequests[dataAboutUser.lastRequests.length - 1 - i]}\n`;
-    }
-  }
-
   try {
     switch (editSend) {
       case `send`:
         await bot
-          .sendMessage(chatId, `👤 <b><i>Профиль</i> • </b><code>${dataAboutUser.chatId}</code> 🔍\n\n<b>История запросов:</b><blockquote><b>${historyText != `` ? historyText : `<i>No requests yet</i>\n`}</b></blockquote>\n<b>Статистика запросов:</b><blockquote>Текст: <b>${dataAboutUser.statistic.response} шт</b>\nИзображения: <b>${dataAboutUser.statistic.image} шт</b>\nВидео: <b>${dataAboutUser.statistic.video} шт</b></blockquote>`, {
+          .sendMessage(chatId, `👤 <b><i>Профиль</i> • </b><code>${dataAboutUser.chatId}</code> 🔍\n\n<b>Информация о себе:</b><blockquote><b></b></blockquote>\n<b>Какой ответ вы хотели бы получить:</b><blockquote><b></b></blockquote>`, {
             parse_mode: `HTML`,
             disable_web_page_preview: true,
             reply_markup: {
@@ -77,7 +68,7 @@ async function profile(chatId, editSend = `send`) {
           });
         break;
       case `edit`:
-        await bot.editMessageText(`👤 <b><i>Профиль</i> • </b><code>${dataAboutUser.chatId}</code> 🔍\n\n<b>История запросов:</b><blockquote><b>${historyText != `` ? historyText : `<i>No requests yet</i>\n`}</b></blockquote>\n<b>Статистика запросов:</b><blockquote>Текст: <b>${dataAboutUser.statistic.response} шт</b>\nИзображения: <b>${dataAboutUser.statistic.image} шт</b>\nВидео: <b>${dataAboutUser.statistic.video} шт</b></blockquote>`, {
+        await bot.editMessageText(`👤 <b><i>Профиль</i> • </b><code>${dataAboutUser.chatId}</code> 🔍\n\n<b>История запросов:</b><blockquote><b></b></blockquote>\n<b>Статистика запросов:</b><blockquote><b></b></blockquote>`, {
           parse_mode: `HTML`,
           chat_id: chatId,
           message_id: dataAboutUser.profileMessageId,
@@ -172,7 +163,8 @@ async function getResponse(chatId, userPrompt) {
       dataAboutUser.textContext.push(result.data[1][0][1]);
     }
 
-    if (dataAboutUser.textContext && dataAboutUser.textContext.length > 4) {
+    if (dataAboutUser.textContext && dataAboutUser.textContext.length > 5) {
+      dataAboutUser.textContext.shift();
       dataAboutUser.textContext.shift();
     }
   } catch (error) {
@@ -386,7 +378,6 @@ async function StartAll() {
   // getting data from DB.json
   if (fs.readFileSync("DB.json") != "[]" && fs.readFileSync("DB.json") != "") {
     let dataFromDB = JSON.parse(fs.readFileSync("DB.json"));
-
     usersData = dataFromDB.usersData || null;
   }
 
@@ -404,10 +395,7 @@ async function StartAll() {
           profileMessageId: null,
           requestMessageId: null,
           userAction: `response`,
-          lastRequests: [],
           textContext: [],
-
-          statistic: { response: 0, image: 0, video: 0 },
         });
       }
 
@@ -417,9 +405,7 @@ async function StartAll() {
       if (text.includes("/start promptBy")) {
         let result = decodeURIComponent(text).match(/promptBy(.+)/);
 
-        intro(chatId).then(() => {
-          dataAboutUser.statistic.response++;
-        });
+        intro(chatId);
         processingRequest(chatId).then(() => {
           bot.sendChatAction(chatId, "typing");
         });
@@ -441,32 +427,22 @@ async function StartAll() {
           break;
       }
 
-      // filling request history (last 5 or less)
+      // answering to user request
       if (text && Array.from(text)[0] != "/") {
-        `${dataAboutUser.lastRequests ? dataAboutUser.lastRequests.push(text.slice(0, 200)) : ``}`;
-
-        if (dataAboutUser.lastRequests && dataAboutUser.lastRequests.length > 5) {
-          dataAboutUser.lastRequests.shift();
-        }
-
-        // saving stats and answering to user request
         switch (dataAboutUser.userAction) {
           case `response`:
-            dataAboutUser.statistic.response++;
             processingRequest(chatId).then(() => {
               bot.sendChatAction(chatId, "typing");
             });
             getResponse(chatId, text);
             break;
           case `image`:
-            dataAboutUser.statistic.image++;
             processingRequest(chatId).then(() => {
               bot.sendChatAction(chatId, "upload_photo");
             });
             getImage(chatId, text);
             break;
           case `video`:
-            dataAboutUser.statistic.video++;
             processingRequest(chatId).then(() => {
               bot.sendChatAction(chatId, "record_video");
             });
