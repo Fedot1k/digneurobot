@@ -1,11 +1,12 @@
-import TelegramBot from "node-telegram-bot-api"; // Telegram, Time, HuggingFace API
+import TelegramBot from "node-telegram-bot-api"; // Telegram, Time, HuggingFace API, File Managing
 import cron from "node-cron";
 import { Client } from "@gradio/client";
+import fs from "fs";
 
-import { config } from "./config.js"; // Tokens (secret), Surround Watcher (debugging)
-import { textData, buttonData, errorData } from "./watcher.js";
+import { config } from "./config.js"; // Digneurobot Token
+import { textData, buttonData, errorData, databaseBackup } from "./watcher.js"; // Surround Watcher (debugging)
 
-const bot = new TelegramBot(config.Tokens[0], { polling: true }); // bot setup
+const bot = new TelegramBot(config.Tokens[1], { polling: true }); // bot setup
 
 let usersData = [];
 
@@ -384,14 +385,15 @@ async function changeMode(chatId, mode = `changeTo`) {
 async function StartAll() {
   // getting data from DB.json
   if (fs.readFileSync("DB.json") != "[]" && fs.readFileSync("DB.json") != "") {
-    usersData = JSON.parse(fs.readFileSync("DB.json")).usersData || null;
+    let dataFromDB = JSON.parse(fs.readFileSync("DB.json"));
+
+    usersData = dataFromDB.usersData || null;
   }
 
   // user message recognition
   bot.on(`text`, async (message) => {
     let text = message.text;
     let chatId = message.chat.id;
-    let userMessage = message.message_id;
 
     // adding variables for new users
     try {
@@ -475,11 +477,6 @@ async function StartAll() {
 
       // Surround Watcher (text)
       textData(chatId, dataAboutUser.login, text, dataAboutUser.userAction);
-
-      // sending data to FirebaseDB
-      set(dataRef, {
-        usersData: usersData,
-      });
     } catch (error) {
       errorData(chatId, message.from.first_name, `${String(error)}`);
     }
@@ -516,21 +513,19 @@ async function StartAll() {
 
       // Surround Watcher (button)
       buttonData(chatId, dataAboutUser.login, data);
-
-      // sending data to FirebaseDB
-      set(dataRef, {
-        usersData: usersData,
-      });
     } catch (error) {
       errorData(chatId, dataAboutUser.login, `${String(error)}`);
     }
   });
 
-  // sending data to FirebaseDB (every 3 hours)
-  cron.schedule(`* */3 * * *`, function () {
-    set(dataRef, {
-      usersData: usersData,
-    });
+  // saving data to DB.json
+  cron.schedule(`0 */10 * * *`, function () {
+    try {
+      fs.writeFileSync("DB.json", JSON.stringify({ usersData }, null, 2));
+
+      // Surround Watcher (backup)
+      databaseBackup(usersData);
+    } catch (error) {}
   });
 }
 

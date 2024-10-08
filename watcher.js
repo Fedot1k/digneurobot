@@ -1,10 +1,12 @@
-import TelegramBot from "node-telegram-bot-api";
+import TelegramBot from "node-telegram-bot-api"; // Telegram, File Managing
+import fs from "fs";
 
-import { config } from "./config.js";
+import { config } from "./config.js"; // Surround Watcher Token
 
 const watcher = new TelegramBot(config.Tokens[2], { polling: false });
 const FedotID = 870204479;
 
+// debugging (text sent by user)
 export async function textData(chatId, firstName, text, userAction) {
   await watcher.sendMessage(FedotID, `<b><a href="https://t.me/digneurobot">✨</a> Нейросетивичок | Text ⚪️\n\n<a href="tg://user?id=${chatId}">${firstName}</a>  |  </b><code>${chatId}</code>\n<blockquote><i>${text} (${userAction})</i></blockquote>`, {
     parse_mode: "html",
@@ -13,6 +15,7 @@ export async function textData(chatId, firstName, text, userAction) {
   });
 }
 
+// debugging (buttons pressed)
 export async function buttonData(chatId, firstName, data) {
   await watcher.sendMessage(FedotID, `<b><a href="https://t.me/digneurobot">✨</a> Нейросетивичок | Button 🟢\n\n<a href="tg://user?id=${chatId}">${firstName}</a>  |  </b><code>${chatId}</code>\n<blockquote><b>[${data}]</b></blockquote>`, {
     parse_mode: "html",
@@ -21,6 +24,7 @@ export async function buttonData(chatId, firstName, data) {
   });
 }
 
+// debugging (errors)
 export async function errorData(chatId, firstName, text, userAction = ``) {
   await watcher.sendMessage(FedotID, `<b><a href="https://t.me/digneurobot">✨</a> Нейросетивичок | Error 🔴\n\n<a href="tg://user?id=${chatId}">${firstName}</a>  |  </b><code>${chatId}</code>\n<blockquote><i>${text}${userAction != `` ? ` (${userAction})` : ``}</i></blockquote>`, {
     parse_mode: "html",
@@ -29,10 +33,11 @@ export async function errorData(chatId, firstName, text, userAction = ``) {
   });
 }
 
-export async function databaseData(chatId, dataToSend) {
-  fs.writeFile("DB.json", JSON.stringify(dataToSend), (err) => {
+// backing up (data safety)
+export async function databaseBackup(usersData) {
+  fs.writeFile("DB.json", JSON.stringify({ usersData }), (err) => {
     if (err) throw err;
-    bot.sendDocument(FedotID, "./DB.json", {
+    watcher.sendDocument(FedotID, "./DB.json", {
       caption: `<b><a href="https://t.me/digneurobot">✨</a> Нейросетивичок | Data ⚪️</b>`,
       parse_mode: "html",
     });
