@@ -14,7 +14,6 @@ let usersData = [];
 bot.setMyCommands([
   { command: "/start", description: "Перезапуск" },
   { command: "/reset", description: "Сброс контекста" },
-  { command: "/mode", description: "Режим генерации" },
   { command: "/profile", description: "Профиль" },
 ]);
 
@@ -23,14 +22,13 @@ async function intro(chatId) {
   const dataAboutUser = usersData.find((obj) => obj.chatId == chatId);
 
   try {
-    await bot.sendMessage(chatId, `Добрo пожаловать в <b>Нейросетивичок</b>. Чтобы задать вопрос, напишите его в чате.\n\n<b>Команды:</b>\n<blockquote>/start - Перезапуск\n/reset - Сброс контекста\n/mode - Режим генерации\n/profile - Профиль</blockquote>`, {
+    await bot.sendMessage(chatId, `Добрo пожаловать в <b>Нейросетивичок</b>. Чтобы задать вопрос, напишите его в чате.\n\n<b>Команды:</b>\n<blockquote>/start - Перезапуск\n/reset - Сброс контекста\n/profile - Профиль</blockquote>`, {
       parse_mode: `HTML`,
       disable_web_page_preview: true,
       reply_markup: {
         inline_keyboard: [[]],
       },
     });
-    dataAboutUser.userAction = `response`;
     dataAboutUser.textContext = [];
   } catch (error) {
     errorData(chatId, dataAboutUser.login, `${String(error)}`);
@@ -68,6 +66,50 @@ async function profile(chatId, editSend = `send`) {
           });
         break;
       case `edit`:
+        await bot.editMessageText(`👤 <b><i>Профиль</i> • </b><code>${dataAboutUser.chatId}</code> 🔍\n\n<b>Информация о себе:</b><blockquote><a href="https://t.me/trialdynamicsbot/?start=selfData"><b>Добавить...</b></a></blockquote>\n\n<b>Какой ответ вы хотели бы получить:</b><blockquote><a href="https://t.me/trialdynamicsbot/?start=answerType"><b>Добавить...</b></a></blockquote>`, {
+          parse_mode: `HTML`,
+          chat_id: chatId,
+          message_id: dataAboutUser.profileMessageId,
+          disable_web_page_preview: true,
+          reply_markup: {
+            inline_keyboard: [
+              [
+                { text: `О боте`, callback_data: `about` },
+                { text: `digfusion ❔`, callback_data: `digfusion` },
+              ],
+              [
+                {
+                  text: `Поддержка 💭`,
+                  url: `https://t.me/digfusionsupport`,
+                },
+              ],
+            ],
+          },
+        });
+        break;
+      case `selfData`:
+        await bot.editMessageText(`👤 <b><i>Профиль</i> • </b><code>${dataAboutUser.chatId}</code> 🔍\n\n<b>Информация о себе:</b><blockquote><a href="https://t.me/trialdynamicsbot/?start=selfData"><b>Добавить...</b></a></blockquote>\n\n<b>Какой ответ вы хотели бы получить:</b><blockquote><a href="https://t.me/trialdynamicsbot/?start=answerType"><b>Добавить...</b></a></blockquote>`, {
+          parse_mode: `HTML`,
+          chat_id: chatId,
+          message_id: dataAboutUser.profileMessageId,
+          disable_web_page_preview: true,
+          reply_markup: {
+            inline_keyboard: [
+              [
+                { text: `О боте`, callback_data: `about` },
+                { text: `digfusion ❔`, callback_data: `digfusion` },
+              ],
+              [
+                {
+                  text: `Поддержка 💭`,
+                  url: `https://t.me/digfusionsupport`,
+                },
+              ],
+            ],
+          },
+        });
+        break;
+      case `answerType`:
         await bot.editMessageText(`👤 <b><i>Профиль</i> • </b><code>${dataAboutUser.chatId}</code> 🔍\n\n<b>Информация о себе:</b><blockquote><a href="https://t.me/trialdynamicsbot/?start=selfData"><b>Добавить...</b></a></blockquote>\n\n<b>Какой ответ вы хотели бы получить:</b><blockquote><a href="https://t.me/trialdynamicsbot/?start=answerType"><b>Добавить...</b></a></blockquote>`, {
           parse_mode: `HTML`,
           chat_id: chatId,
@@ -141,19 +183,10 @@ async function getResponse(chatId, userPrompt) {
   try {
     const client = await Client.connect("Qwen/Qwen2.5-72B-Instruct");
     const result = await client.predict("/model_chat", {
-      query: `You are an AI designed to categorize user requests and respond with a single word. Follow these rules strictly:
-
-      • If the user request is a general text-based query (e.g., math problems, asking about a person, facts about animals), respond with: "text"
-      • If the user request is about generating an image (e.g., drawing a character, creating a visual scene), respond with: "image"
-      • If the user request is about generating a video (e.g., a video of animals, scenes with specific actions), respond with: "video"
-      • If the request doesn't fit these categories or is nonsensical, respond with: "text"
-      
-      Now, here's the user's request: ${userPrompt}`,
+      query: `${userPrompt}`,
       history: [],
       system: `You are Нейросетивичок, created by digfusion. You are a helpful AI Telegram assistant. All your answers are original. Never use emojis and math formatting. ${dataAboutUser.textContext ? `Our chat history: ${dataAboutUser.textContext}` : ``}`,
     });
-
-    bot.sendChatAction(chatId, "typing");
 
     bot.deleteMessage(chatId, dataAboutUser.requestMessageId);
 
@@ -313,6 +346,50 @@ async function resetTextChat(chatId) {
   }
 }
 
+// changing AI mode (text, image, video, photo)
+async function changeMode(chatId, userPrompt) {
+  const dataAboutUser = usersData.find((obj) => obj.chatId == chatId);
+
+  try {
+    const client = await Client.connect("Qwen/Qwen2.5-72B-Instruct");
+    const result = await client.predict("/model_chat", {
+      query: `You are an AI designed to categorize user requests and respond with a single word. Follow these rules strictly:
+
+      • If the user request is a general text-based query (e.g., math problems, asking about a person, facts about animals), respond with: "response"
+      • If the user request is about generating an image (e.g., drawing a character, creating a visual scene), respond with: "image"
+      • If the user request is about generating a video (e.g., a video of animals, scenes with specific actions), respond with: "video"
+      • If the request doesn't fit these categories or is nonsensical, respond with: "response"
+      
+      Now, here's the user's request: ${userPrompt}`,
+      history: [],
+      system: `You are Нейросетивичок, created by digfusion. You are a helpful AI Telegram assistant. All your answers are original. Never use emojis and math formatting. ${dataAboutUser.textContext ? `Our chat history: ${dataAboutUser.textContext}` : ``}`,
+    });
+
+    switch (result.data[1][0][1]) {
+      case `response`:
+        processingRequest(chatId).then(() => {
+          bot.sendChatAction(chatId, "typing");
+        });
+        getResponse(chatId, userPrompt);
+        break;
+      case `image`:
+        processingRequest(chatId).then(() => {
+          bot.sendChatAction(chatId, "upload_photo");
+        });
+        getImage(chatId, userPrompt);
+        break;
+      case `video`:
+        processingRequest(chatId).then(() => {
+          bot.sendChatAction(chatId, "record_video");
+        });
+        getVideo(chatId, userPrompt);
+        break;
+    }
+  } catch (error) {
+    errorData(chatId, dataAboutUser.login, `${String(error)}`);
+  }
+}
+
 // master function
 async function StartAll() {
   // getting data from DB.json
@@ -334,8 +411,8 @@ async function StartAll() {
           login: message.from.first_name,
           profileMessageId: null,
           requestMessageId: null,
-          userAction: `response`,
           textContext: [],
+          userAction: ``,
         });
       }
 
@@ -358,40 +435,26 @@ async function StartAll() {
         case `/reset`:
           resetTextChat(chatId);
           break;
-        case `/mode`:
-          changeMode(chatId);
-          break;
         case `/profile`:
           profile(chatId, `send`);
+          break;
+        case `/start selfData`:
+          dataAboutUser.userAction = `selfData`;
+          profile(chatId, `selfData`);
+          break;
+        case `/start answerType`:
+          dataAboutUser.userAction = `answerType`;
+          profile(chatId, `answerType`);
           break;
       }
 
       // answering to user request
       if (text && Array.from(text)[0] != "/") {
-        switch (dataAboutUser.userAction) {
-          case `response`:
-            processingRequest(chatId).then(() => {
-              bot.sendChatAction(chatId, "typing");
-            });
-            getResponse(chatId, text);
-            break;
-          case `image`:
-            processingRequest(chatId).then(() => {
-              bot.sendChatAction(chatId, "upload_photo");
-            });
-            getImage(chatId, text);
-            break;
-          case `video`:
-            processingRequest(chatId).then(() => {
-              bot.sendChatAction(chatId, "record_video");
-            });
-            getVideo(chatId, text);
-            break;
-        }
+        changeMode(chatId, text);
       }
 
       // Surround Watcher (text)
-      textData(chatId, dataAboutUser.login, text, dataAboutUser.userAction);
+      textData(chatId, dataAboutUser.login, text);
     } catch (error) {
       errorData(chatId, message.from.first_name, `${String(error)}`);
     }
@@ -445,7 +508,7 @@ async function StartAll() {
       console.log(photoCaption);
 
       // Surround Watcher (photo)
-      textData(chatId, dataAboutUser.login, photoCaption, dataAboutUser.userAction);
+      textData(chatId, dataAboutUser.login, photoCaption);
     } catch (error) {
       errorData(chatId, dataAboutUser.login, `${String(error)}`);
     }

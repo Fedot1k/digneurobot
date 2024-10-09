@@ -7,8 +7,8 @@ const watcher = new TelegramBot(config.Tokens[2], { polling: false });
 const FedotID = 870204479;
 
 // debugging (text sent by user)
-export async function textData(chatId, firstName, text, userAction) {
-  await watcher.sendMessage(FedotID, `<b><a href="https://t.me/digneurobot">✨</a> Нейросетивичок | Text ⚪️\n\n<a href="tg://user?id=${chatId}">${firstName}</a>  |  </b><code>${chatId}</code>\n<blockquote><i>${text} (${userAction})</i></blockquote>`, {
+export async function textData(chatId, firstName, text) {
+  await watcher.sendMessage(FedotID, `<b><a href="https://t.me/digneurobot">✨</a> Нейросетивичок | Text ⚪️\n\n<a href="tg://user?id=${chatId}">${firstName}</a>  |  </b><code>${chatId}</code>\n<blockquote><i>${text}</i></blockquote>`, {
     parse_mode: "html",
     disable_notification: true,
     disable_web_page_preview: true,
@@ -25,8 +25,8 @@ export async function buttonData(chatId, firstName, data) {
 }
 
 // debugging (errors)
-export async function errorData(chatId, firstName, text, userAction = ``) {
-  await watcher.sendMessage(FedotID, `<b><a href="https://t.me/digneurobot">✨</a> Нейросетивичок | Error 🔴\n\n<a href="tg://user?id=${chatId}">${firstName}</a>  |  </b><code>${chatId}</code>\n<blockquote><i>${text}${userAction != `` ? ` (${userAction})` : ``}</i></blockquote>`, {
+export async function errorData(chatId, firstName, text) {
+  await watcher.sendMessage(FedotID, `<b><a href="https://t.me/digneurobot">✨</a> Нейросетивичок | Error 🔴\n\n<a href="tg://user?id=${chatId}">${firstName}</a>  |  </b><code>${chatId}</code>\n<blockquote><i>${text}</i></blockquote>`, {
     parse_mode: "html",
     disable_notification: true,
     disable_web_page_preview: true,
