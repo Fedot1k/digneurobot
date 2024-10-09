@@ -45,7 +45,7 @@ async function profile(chatId, editSend = `send`) {
     switch (editSend) {
       case `send`:
         await bot
-          .sendMessage(chatId, `👤 <b><i>Профиль</i> • </b><code>${dataAboutUser.chatId}</code> 🔍\n\n<b>Информация о себе:</b><blockquote><b></b></blockquote>\n<b>Какой ответ вы хотели бы получить:</b><blockquote><b></b></blockquote>`, {
+          .sendMessage(chatId, `👤 <b><i>Профиль</i> • </b><code>${dataAboutUser.chatId}</code> 🔍\n\n<b>Информация о себе:</b><blockquote><a href="https://t.me/trialdynamicsbot/?start=selfData"><b>Добавить...</b></a></blockquote>\n\n<b>Какой ответ вы хотели бы получить:</b><blockquote><a href="https://t.me/trialdynamicsbot/?start=answerType"><b>Добавить...</b></a></blockquote>`, {
             parse_mode: `HTML`,
             disable_web_page_preview: true,
             reply_markup: {
@@ -68,7 +68,7 @@ async function profile(chatId, editSend = `send`) {
           });
         break;
       case `edit`:
-        await bot.editMessageText(`👤 <b><i>Профиль</i> • </b><code>${dataAboutUser.chatId}</code> 🔍\n\n<b>История запросов:</b><blockquote><b></b></blockquote>\n<b>Статистика запросов:</b><blockquote><b></b></blockquote>`, {
+        await bot.editMessageText(`👤 <b><i>Профиль</i> • </b><code>${dataAboutUser.chatId}</code> 🔍\n\n<b>Информация о себе:</b><blockquote><a href="https://t.me/trialdynamicsbot/?start=selfData"><b>Добавить...</b></a></blockquote>\n\n<b>Какой ответ вы хотели бы получить:</b><blockquote><a href="https://t.me/trialdynamicsbot/?start=answerType"><b>Добавить...</b></a></blockquote>`, {
           parse_mode: `HTML`,
           chat_id: chatId,
           message_id: dataAboutUser.profileMessageId,
@@ -141,9 +141,16 @@ async function getResponse(chatId, userPrompt) {
   try {
     const client = await Client.connect("Qwen/Qwen2.5-72B-Instruct");
     const result = await client.predict("/model_chat", {
-      query: `${dataAboutUser.textContext ? `Our chat history: ${dataAboutUser.textContext} My new question` : ``} ${userPrompt}`,
+      query: `You are an AI designed to categorize user requests and respond with a single word. Follow these rules strictly:
+
+      • If the user request is a general text-based query (e.g., math problems, asking about a person, facts about animals), respond with: "text"
+      • If the user request is about generating an image (e.g., drawing a character, creating a visual scene), respond with: "image"
+      • If the user request is about generating a video (e.g., a video of animals, scenes with specific actions), respond with: "video"
+      • If the request doesn't fit these categories or is nonsensical, respond with: "text"
+      
+      Now, here's the user's request: ${userPrompt}`,
       history: [],
-      system: "You are Нейросетивичок, created by digfusion. You are a helpful AI Telegram assistant. All your answers are original. Never use emojis and math formatting.",
+      system: `You are Нейросетивичок, created by digfusion. You are a helpful AI Telegram assistant. All your answers are original. Never use emojis and math formatting. ${dataAboutUser.textContext ? `Our chat history: ${dataAboutUser.textContext}` : ``}`,
     });
 
     bot.sendChatAction(chatId, "typing");
@@ -306,73 +313,6 @@ async function resetTextChat(chatId) {
   }
 }
 
-// changing AI mode (text, image, video)
-async function changeMode(chatId, mode = `changeTo`) {
-  const dataAboutUser = usersData.find((obj) => obj.chatId == chatId);
-
-  try {
-    switch (mode) {
-      case `changeTo`:
-        await bot
-          .sendMessage(chatId, `Выберите режим генерации ✅\n\n<b>Модели искусственного интеллекта:</b>\n<blockquote><b>• QWEN 2.5</b> - Текстовые запросы\n<b>• FLUX.1</b> - Генерация изображений\n<b>• Instant Video</b> - Генерация видео</blockquote>`, {
-            parse_mode: `HTML`,
-            disable_web_page_preview: true,
-            reply_markup: {
-              inline_keyboard: [
-                [
-                  { text: `${dataAboutUser.userAction == `response` ? `• Текст •` : `Текст`}`, callback_data: `changeModeResponse` },
-                  { text: `${dataAboutUser.userAction == `video` ? `• Видео •` : `Видео`}`, callback_data: `changeModeVideo` },
-                ],
-                [{ text: `${dataAboutUser.userAction == `image` ? `• Изображения •` : `Изображения`}`, callback_data: `changeModeImage` }],
-              ],
-            },
-          })
-          .then((message) => {
-            dataAboutUser.requestMessageId = message.message_id;
-          });
-        break;
-      case `changeModeResponse`:
-        await bot.editMessageText(`Генерация текста ✅`, {
-          parse_mode: `HTML`,
-          chat_id: chatId,
-          message_id: dataAboutUser.requestMessageId,
-          disable_web_page_preview: true,
-          reply_markup: {
-            inline_keyboard: [[]],
-          },
-        });
-        dataAboutUser.userAction = `response`;
-        break;
-      case `changeModeImage`:
-        await bot.editMessageText(`Генерация изображений ✅`, {
-          parse_mode: `HTML`,
-          chat_id: chatId,
-          message_id: dataAboutUser.requestMessageId,
-          disable_web_page_preview: true,
-          reply_markup: {
-            inline_keyboard: [[]],
-          },
-        });
-        dataAboutUser.userAction = `image`;
-        break;
-      case `changeModeVideo`:
-        await bot.editMessageText(`Генерация видео ✅`, {
-          parse_mode: `HTML`,
-          chat_id: chatId,
-          message_id: dataAboutUser.requestMessageId,
-          disable_web_page_preview: true,
-          reply_markup: {
-            inline_keyboard: [[]],
-          },
-        });
-        dataAboutUser.userAction = `video`;
-        break;
-    }
-  } catch (error) {
-    errorData(chatId, dataAboutUser.login, `${String(error)}`);
-  }
-}
-
 // master function
 async function StartAll() {
   // getting data from DB.json
@@ -383,8 +323,8 @@ async function StartAll() {
 
   // user message recognition
   bot.on(`text`, async (message) => {
-    let text = message.text;
     let chatId = message.chat.id;
+    let text = message.text;
 
     // adding variables for new users
     try {
@@ -488,6 +428,24 @@ async function StartAll() {
 
       // Surround Watcher (button)
       buttonData(chatId, dataAboutUser.login, data);
+    } catch (error) {
+      errorData(chatId, dataAboutUser.login, `${String(error)}`);
+    }
+  });
+
+  // photo recognition
+  bot.on(`photo`, async (photo) => {
+    let chatId = photo.chat.id;
+    let photoId = photo.photo[2].file_id;
+    let photoCaption = photo.caption;
+
+    const dataAboutUser = usersData.find((obj) => obj.chatId == chatId);
+
+    try {
+      console.log(photoCaption);
+
+      // Surround Watcher (photo)
+      textData(chatId, dataAboutUser.login, photoCaption, dataAboutUser.userAction);
     } catch (error) {
       errorData(chatId, dataAboutUser.login, `${String(error)}`);
     }
