@@ -29,7 +29,9 @@ async function intro(chatId) {
         inline_keyboard: [[]],
       },
     });
+
     dataAboutUser.textContext = [];
+    fs.writeFileSync("DB.json", JSON.stringify({ usersData }, null, 2));
   } catch (error) {
     errorData(chatId, dataAboutUser.login, `${String(error)}`);
   }
@@ -43,7 +45,7 @@ async function profile(chatId, editSend = `send`) {
     switch (editSend) {
       case `send`:
         await bot
-          .sendMessage(chatId, `👤 <b><i>Профиль</i> • </b><code>${dataAboutUser.chatId}</code> 🔍\n\n<b>Информация о себе для Нейросети:</b><blockquote><a href="https://t.me/trialdynamicsbot/?start=selfData"><b>Добавить...</b></a></blockquote>\n\n<b>Какой ответ вы хотели бы получить:</b><blockquote><a href="https://t.me/trialdynamicsbot/?start=answerType"><b>Добавить...</b></a></blockquote>`, {
+          .sendMessage(chatId, `👤 <b><i>Профиль</i> • </b><code>${dataAboutUser.chatId}</code> 🔍\n\n<b>Информация о себе для Нейросети:</b><blockquote>${dataAboutUser.selfDataText ? `${dataAboutUser.selfDataText}\n\n<a href="https://t.me/trialdynamicsbot/?start=selfData"><b>Изменить...</b></a>` : `<a href="https://t.me/trialdynamicsbot/?start=selfData"><b>Добавить...</b></a>`}</blockquote>\n\n<b>Какой ответ вы хотели бы получить:</b><blockquote>${dataAboutUser.answerTypeText ? `${dataAboutUser.answerTypeText}\n\n<a href="https://t.me/trialdynamicsbot/?start=answerType"><b>Изменить...</b></a>` : `<a href="https://t.me/trialdynamicsbot/?start=answerType"><b>Добавить...</b></a>`}</blockquote>`, {
             parse_mode: `HTML`,
             disable_web_page_preview: true,
             reply_markup: {
@@ -66,7 +68,7 @@ async function profile(chatId, editSend = `send`) {
           });
         break;
       case `edit`:
-        await bot.editMessageText(`👤 <b><i>Профиль</i> • </b><code>${dataAboutUser.chatId}</code> 🔍\n\n<b>Информация о себе для Нейросети:</b><blockquote><a href="https://t.me/trialdynamicsbot/?start=selfData"><b>Добавить...</b></a></blockquote>\n\n<b>Какой ответ вы хотели бы получить:</b><blockquote><a href="https://t.me/trialdynamicsbot/?start=answerType"><b>Добавить...</b></a></blockquote>`, {
+        await bot.editMessageText(`👤 <b><i>Профиль</i> • </b><code>${dataAboutUser.chatId}</code> 🔍\n\n<b>Информация о себе для Нейросети:</b><blockquote>${dataAboutUser.selfDataText ? `${dataAboutUser.selfDataText}\n\n<a href="https://t.me/trialdynamicsbot/?start=selfData"><b>Изменить...</b></a>` : `<a href="https://t.me/trialdynamicsbot/?start=selfData"><b>Добавить...</b></a>`}</blockquote>\n\n<b>Какой ответ вы хотели бы получить:</b><blockquote>${dataAboutUser.answerTypeText ? `${dataAboutUser.answerTypeText}\n\n<a href="https://t.me/trialdynamicsbot/?start=answerType"><b>Изменить...</b></a>` : `<a href="https://t.me/trialdynamicsbot/?start=answerType"><b>Добавить...</b></a>`}</blockquote>`, {
           parse_mode: `HTML`,
           chat_id: chatId,
           message_id: dataAboutUser.profileMessageId,
@@ -88,7 +90,7 @@ async function profile(chatId, editSend = `send`) {
         });
         break;
       case `selfData`:
-        await bot.editMessageText(`👤 <b><i>Профиль</i> • </b><code>${dataAboutUser.chatId}</code> 🔍\n\n<b>Информация о себе для Нейросети:</b><blockquote>${dataAboutUser.selfData ? `${dataAboutUser.selfData}` : `<i>Напишите текст в чате, чтобы изменить...</i>`}</blockquote>`, {
+        await bot.editMessageText(`👤 <b><i>Профиль</i> • </b><code>${dataAboutUser.chatId}</code> 🔍\n\n<b>Информация о себе для Нейросети:</b>${dataAboutUser.selfDataText ? `<blockquote>${dataAboutUser.selfDataText}</blockquote>\n\n<i>Напишите текст в чате, чтобы изменить...</i>` : `<blockquote><i>Напишите текст в чате, чтобы добавить...</i></blockquote>`}`, {
           parse_mode: `HTML`,
           chat_id: chatId,
           message_id: dataAboutUser.profileMessageId,
@@ -99,7 +101,7 @@ async function profile(chatId, editSend = `send`) {
         });
         break;
       case `answerType`:
-        await bot.editMessageText(`👤 <b><i>Профиль</i> • </b><code>${dataAboutUser.chatId}</code> 🔍\n\n<b>Какой ответ вы хотели бы получить:</b><blockquote>${dataAboutUser.selfData ? `${dataAboutUser.selfData}` : `<i>Напишите текст в чате, чтобы изменить...</i>`}</blockquote>`, {
+        await bot.editMessageText(`👤 <b><i>Профиль</i> • </b><code>${dataAboutUser.chatId}</code> 🔍\n\n<b>Какой ответ вы хотели бы получить:</b>${dataAboutUser.answerTypeText ? `<blockquote>${dataAboutUser.answerTypeText}</blockquote>\n\n<i>Напишите текст в чате, чтобы изменить...</i>` : `<blockquote><i>Напишите текст в чате, чтобы добавить...</i></blockquote>`}`, {
           parse_mode: `HTML`,
           chat_id: chatId,
           message_id: dataAboutUser.profileMessageId,
@@ -163,7 +165,7 @@ async function getResponse(chatId, userPrompt) {
     const result = await client.predict("/model_chat", {
       query: `${userPrompt}`,
       history: [],
-      system: `You are Нейро, created by digfusion. You are a helpful AI Telegram assistant. All your answers are original. Never use emojis and math formatting. ${dataAboutUser.textContext ? `Our chat history: ${dataAboutUser.textContext}` : ``}`,
+      system: `You are Нейро, created by digfusion. You are a helpful and minimalistic AI Telegram assistant. All your answers are original. Never use emojis and math formatting. ${dataAboutUser.textContext ? `Our chat history: ${dataAboutUser.textContext}` : ``}`,
     });
 
     bot.deleteMessage(chatId, dataAboutUser.requestMessageId);
@@ -185,6 +187,8 @@ async function getResponse(chatId, userPrompt) {
       dataAboutUser.textContext.shift();
       dataAboutUser.textContext.shift();
     }
+
+    fs.writeFileSync("DB.json", JSON.stringify({ usersData }, null, 2));
   } catch (error) {
     failedRequest(chatId);
     errorData(chatId, dataAboutUser.login, `${String(error)}`, `response`);
@@ -311,6 +315,7 @@ async function resetTextChat(chatId) {
 
   try {
     dataAboutUser.textContext = [];
+    fs.writeFileSync("DB.json", JSON.stringify({ usersData }, null, 2));
 
     await bot.sendMessage(chatId, `Контекст успешно сброшен ✅<blockquote><b>Напишите свой вопрос в чате.</b></blockquote>`, {
       parse_mode: `HTML`,
@@ -331,16 +336,16 @@ async function changeMode(chatId, userPrompt) {
   try {
     const client = await Client.connect("Qwen/Qwen2.5-72B-Instruct");
     const result = await client.predict("/model_chat", {
-      query: `You are an AI designed to categorize user requests and respond with a single word. Follow these rules strictly:
+      query: `Categorize the user request and respond with one word:
 
-      • If the user request is a general text-based query (e.g., math problems, asking about a person, facts about animals), respond with: "response"
-      • If the user request is about generating an image (e.g., drawing a character, creating a visual scene), respond with: "image"
-      • If the user request is about generating a video (e.g., a video of animals, scenes with specific actions), respond with: "video"
-      • If the request doesn't fit these categories or is nonsensical, respond with: "response"
+      • "response" for general queries (math, facts, etc.)
+      • "image" for image generation requests
+      • "video" for video generation requests
+      • If unclear or irrelevant, respond with "response"
       
-      Now, here's the user's request: ${userPrompt}`,
+      User request: ${userPrompt}`,
       history: [],
-      system: `You are Нейро, created by digfusion. You are a helpful AI Telegram assistant. All your answers are original. Never use emojis and math formatting. ${dataAboutUser.textContext ? `Our chat history: ${dataAboutUser.textContext}` : ``}`,
+      system: `You can answer with only ONE word.`,
     });
 
     switch (result.data[1][0][1]) {
@@ -385,23 +390,13 @@ async function StartAll() {
           profileMessageId: null,
           requestMessageId: null,
           textContext: [],
-          userAction: ``,
-          selfData: ``,
-          answerType: ``,
+          userAction: `regular`,
+          selfDataText: ``,
+          answerTypeText: ``,
         });
       }
 
       const dataAboutUser = usersData.find((obj) => obj.chatId == chatId);
-
-      // digmathbot integration
-      if (text.includes("/start promptBy")) {
-        let result = decodeURIComponent(text).match(/promptBy(.+)/);
-        intro(chatId);
-        processingRequest(chatId).then(() => {
-          bot.sendChatAction(chatId, "typing");
-        });
-        getResponse(chatId, result[1]);
-      }
 
       switch (text) {
         case `/start`:
@@ -415,26 +410,41 @@ async function StartAll() {
           break;
         case `/start selfData`:
           bot.deleteMessage(chatId, userMessage);
-          dataAboutUser.userAction = `selfData`;
+          dataAboutUser.userAction = `selfDataInput`;
           profile(chatId, `selfData`);
           break;
         case `/start answerType`:
           bot.deleteMessage(chatId, userMessage);
-          dataAboutUser.userAction = `answerType`;
+          dataAboutUser.userAction = `answerTypeInput`;
           profile(chatId, `answerType`);
           break;
       }
 
       // answering to user request
       if (text && Array.from(text)[0] != "/") {
-        processingRequest(chatId);
-        changeMode(chatId, text);
+        switch (dataAboutUser.userAction) {
+          case `regular`:
+            processingRequest(chatId);
+            changeMode(chatId, text);
+            break;
+          case `selfDataInput`:
+            bot.deleteMessage(chatId, userMessage);
+            dataAboutUser.selfDataText = text;
+            dataAboutUser.userAction = `regular`;
+            profile(chatId, `edit`);
+            break;
+          case `answerTypeInput`:
+            bot.deleteMessage(chatId, userMessage);
+            dataAboutUser.answerTypeText = text;
+            dataAboutUser.userAction = `regular`;
+            profile(chatId, `edit`);
+            break;
+        }
       }
 
       // Surround Watcher (text)
       textData(chatId, dataAboutUser.login, text);
     } catch (error) {
-      console.log(error);
       errorData(chatId, message.from.first_name, `${String(error)}`);
     }
   });
@@ -449,6 +459,8 @@ async function StartAll() {
     try {
       switch (data) {
         case `profile`:
+          dataAboutUser.userAction = `regular`;
+          fs.writeFileSync("DB.json", JSON.stringify({ usersData }, null, 2));
           profile(chatId, `edit`);
           break;
         case `digfusion`:
@@ -456,6 +468,16 @@ async function StartAll() {
           break;
         case `about`:
           about(chatId);
+          break;
+        case `selfDataTextDelete`:
+          dataAboutUser.selfDataText = ``;
+          fs.writeFileSync("DB.json", JSON.stringify({ usersData }, null, 2));
+          profile(chatId, `selfData`);
+          break;
+        case `answerTypeTextDelete`:
+          dataAboutUser.answerTypeText = ``;
+          fs.writeFileSync("DB.json", JSON.stringify({ usersData }, null, 2));
+          profile(chatId, `answerType`);
           break;
       }
 
@@ -485,7 +507,7 @@ async function StartAll() {
   });
 
   // saving data to DB.json
-  cron.schedule(`0 */10 * * *`, function () {
+  cron.schedule(`* */10 * * *`, function () {
     try {
       fs.writeFileSync("DB.json", JSON.stringify({ usersData }, null, 2));
 
