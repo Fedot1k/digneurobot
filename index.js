@@ -43,7 +43,7 @@ async function profile(chatId, editSend = `send`) {
     switch (editSend) {
       case `send`:
         await bot
-          .sendMessage(chatId, `👤 <b><i>Профиль</i> • </b><code>${dataAboutUser.chatId}</code> 🔍\n\n<b>Информация о себе:</b><blockquote><a href="https://t.me/trialdynamicsbot/?start=selfData"><b>Добавить...</b></a></blockquote>\n\n<b>Какой ответ вы хотели бы получить:</b><blockquote><a href="https://t.me/trialdynamicsbot/?start=answerType"><b>Добавить...</b></a></blockquote>`, {
+          .sendMessage(chatId, `👤 <b><i>Профиль</i> • </b><code>${dataAboutUser.chatId}</code> 🔍\n\n<b>Информация о себе для Нейросети:</b><blockquote><a href="https://t.me/trialdynamicsbot/?start=selfData"><b>Добавить...</b></a></blockquote>\n\n<b>Какой ответ вы хотели бы получить:</b><blockquote><a href="https://t.me/trialdynamicsbot/?start=answerType"><b>Добавить...</b></a></blockquote>`, {
             parse_mode: `HTML`,
             disable_web_page_preview: true,
             reply_markup: {
@@ -66,7 +66,7 @@ async function profile(chatId, editSend = `send`) {
           });
         break;
       case `edit`:
-        await bot.editMessageText(`👤 <b><i>Профиль</i> • </b><code>${dataAboutUser.chatId}</code> 🔍\n\n<b>Информация о себе:</b><blockquote><a href="https://t.me/trialdynamicsbot/?start=selfData"><b>Добавить...</b></a></blockquote>\n\n<b>Какой ответ вы хотели бы получить:</b><blockquote><a href="https://t.me/trialdynamicsbot/?start=answerType"><b>Добавить...</b></a></blockquote>`, {
+        await bot.editMessageText(`👤 <b><i>Профиль</i> • </b><code>${dataAboutUser.chatId}</code> 🔍\n\n<b>Информация о себе для Нейросети:</b><blockquote><a href="https://t.me/trialdynamicsbot/?start=selfData"><b>Добавить...</b></a></blockquote>\n\n<b>Какой ответ вы хотели бы получить:</b><blockquote><a href="https://t.me/trialdynamicsbot/?start=answerType"><b>Добавить...</b></a></blockquote>`, {
           parse_mode: `HTML`,
           chat_id: chatId,
           message_id: dataAboutUser.profileMessageId,
@@ -88,46 +88,24 @@ async function profile(chatId, editSend = `send`) {
         });
         break;
       case `selfData`:
-        await bot.editMessageText(`👤 <b><i>Профиль</i> • </b><code>${dataAboutUser.chatId}</code> 🔍\n\n<b>Информация о себе:</b><blockquote><a href="https://t.me/trialdynamicsbot/?start=selfData"><b>Добавить...</b></a></blockquote>\n\n<b>Какой ответ вы хотели бы получить:</b><blockquote><a href="https://t.me/trialdynamicsbot/?start=answerType"><b>Добавить...</b></a></blockquote>`, {
+        await bot.editMessageText(`👤 <b><i>Профиль</i> • </b><code>${dataAboutUser.chatId}</code> 🔍\n\n<b>Информация о себе для Нейросети:</b><blockquote>${dataAboutUser.selfData ? `${dataAboutUser.selfData}` : `<i>Напишите текст в чате, чтобы изменить...</i>`}</blockquote>`, {
           parse_mode: `HTML`,
           chat_id: chatId,
           message_id: dataAboutUser.profileMessageId,
           disable_web_page_preview: true,
           reply_markup: {
-            inline_keyboard: [
-              [
-                { text: `О боте`, callback_data: `about` },
-                { text: `digfusion ❔`, callback_data: `digfusion` },
-              ],
-              [
-                {
-                  text: `Поддержка 💭`,
-                  url: `https://t.me/digfusionsupport`,
-                },
-              ],
-            ],
+            inline_keyboard: [[{ text: `⬅️Назад`, callback_data: `profile` }]],
           },
         });
         break;
       case `answerType`:
-        await bot.editMessageText(`👤 <b><i>Профиль</i> • </b><code>${dataAboutUser.chatId}</code> 🔍\n\n<b>Информация о себе:</b><blockquote><a href="https://t.me/trialdynamicsbot/?start=selfData"><b>Добавить...</b></a></blockquote>\n\n<b>Какой ответ вы хотели бы получить:</b><blockquote><a href="https://t.me/trialdynamicsbot/?start=answerType"><b>Добавить...</b></a></blockquote>`, {
+        await bot.editMessageText(`👤 <b><i>Профиль</i> • </b><code>${dataAboutUser.chatId}</code> 🔍\n\n<b>Какой ответ вы хотели бы получить:</b><blockquote>${dataAboutUser.selfData ? `${dataAboutUser.selfData}` : `<i>Напишите текст в чате, чтобы изменить...</i>`}</blockquote>`, {
           parse_mode: `HTML`,
           chat_id: chatId,
           message_id: dataAboutUser.profileMessageId,
           disable_web_page_preview: true,
           reply_markup: {
-            inline_keyboard: [
-              [
-                { text: `О боте`, callback_data: `about` },
-                { text: `digfusion ❔`, callback_data: `digfusion` },
-              ],
-              [
-                {
-                  text: `Поддержка 💭`,
-                  url: `https://t.me/digfusionsupport`,
-                },
-              ],
-            ],
+            inline_keyboard: [[{ text: `⬅️Назад`, callback_data: `profile` }]],
           },
         });
         break;
@@ -185,7 +163,7 @@ async function getResponse(chatId, userPrompt) {
     const result = await client.predict("/model_chat", {
       query: `${userPrompt}`,
       history: [],
-      system: `You are Нейросетивичок, created by digfusion. You are a helpful AI Telegram assistant. All your answers are original. Never use emojis and math formatting. ${dataAboutUser.textContext ? `Our chat history: ${dataAboutUser.textContext}` : ``}`,
+      system: `You are Нейро, created by digfusion. You are a helpful AI Telegram assistant. All your answers are original. Never use emojis and math formatting. ${dataAboutUser.textContext ? `Our chat history: ${dataAboutUser.textContext}` : ``}`,
     });
 
     bot.deleteMessage(chatId, dataAboutUser.requestMessageId);
@@ -362,26 +340,20 @@ async function changeMode(chatId, userPrompt) {
       
       Now, here's the user's request: ${userPrompt}`,
       history: [],
-      system: `You are Нейросетивичок, created by digfusion. You are a helpful AI Telegram assistant. All your answers are original. Never use emojis and math formatting. ${dataAboutUser.textContext ? `Our chat history: ${dataAboutUser.textContext}` : ``}`,
+      system: `You are Нейро, created by digfusion. You are a helpful AI Telegram assistant. All your answers are original. Never use emojis and math formatting. ${dataAboutUser.textContext ? `Our chat history: ${dataAboutUser.textContext}` : ``}`,
     });
 
     switch (result.data[1][0][1]) {
       case `response`:
-        processingRequest(chatId).then(() => {
-          bot.sendChatAction(chatId, "typing");
-        });
+        bot.sendChatAction(chatId, "typing");
         getResponse(chatId, userPrompt);
         break;
       case `image`:
-        processingRequest(chatId).then(() => {
-          bot.sendChatAction(chatId, "upload_photo");
-        });
+        bot.sendChatAction(chatId, "upload_photo");
         getImage(chatId, userPrompt);
         break;
       case `video`:
-        processingRequest(chatId).then(() => {
-          bot.sendChatAction(chatId, "record_video");
-        });
+        bot.sendChatAction(chatId, "record_video");
         getVideo(chatId, userPrompt);
         break;
     }
@@ -402,6 +374,7 @@ async function StartAll() {
   bot.on(`text`, async (message) => {
     let chatId = message.chat.id;
     let text = message.text;
+    let userMessage = message.message_id;
 
     // adding variables for new users
     try {
@@ -413,6 +386,8 @@ async function StartAll() {
           requestMessageId: null,
           textContext: [],
           userAction: ``,
+          selfData: ``,
+          answerType: ``,
         });
       }
 
@@ -439,10 +414,12 @@ async function StartAll() {
           profile(chatId, `send`);
           break;
         case `/start selfData`:
+          bot.deleteMessage(chatId, userMessage);
           dataAboutUser.userAction = `selfData`;
           profile(chatId, `selfData`);
           break;
         case `/start answerType`:
+          bot.deleteMessage(chatId, userMessage);
           dataAboutUser.userAction = `answerType`;
           profile(chatId, `answerType`);
           break;
@@ -450,12 +427,14 @@ async function StartAll() {
 
       // answering to user request
       if (text && Array.from(text)[0] != "/") {
+        processingRequest(chatId);
         changeMode(chatId, text);
       }
 
       // Surround Watcher (text)
       textData(chatId, dataAboutUser.login, text);
     } catch (error) {
+      console.log(error);
       errorData(chatId, message.from.first_name, `${String(error)}`);
     }
   });
@@ -469,15 +448,6 @@ async function StartAll() {
 
     try {
       switch (data) {
-        case `changeModeResponse`:
-          changeMode(chatId, data);
-          break;
-        case `changeModeImage`:
-          changeMode(chatId, data);
-          break;
-        case `changeModeVideo`:
-          changeMode(chatId, data);
-          break;
         case `profile`:
           profile(chatId, `edit`);
           break;
