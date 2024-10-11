@@ -186,7 +186,7 @@ async function getResponse(chatId, userPrompt) {
     const result = await client.predict("/model_chat", {
       query: `${dataAboutUser.textContext ? `Our chat history: ${dataAboutUser.textContext}\n\nMy new request: ` : ``}${userPrompt}`,
       history: [],
-      system: `You are Нейро, created by digfusion. You are a helpful and minimalistic AI Telegram assistant. All your answers are original. Never use emojis and math formatting.
+      system: `You are Нейро, created by digfusion. You are a very minimalistic and helpful AI Telegram assistant. All your answers are original. Never use emojis and math formatting.
       
       ${dataAboutUser.userInfoText ? `User info: ${dataAboutUser.userInfoText}` : ``}
       
@@ -561,7 +561,7 @@ async function StartAll() {
   });
 
   // saving data to DB.json
-  cron.schedule(`* */10 * * *`, function () {
+  cron.schedule(`0 */10 * * *`, function () {
     try {
       fs.writeFileSync("DB.json", JSON.stringify({ usersData }, null, 2));
 
