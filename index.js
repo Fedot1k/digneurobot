@@ -386,16 +386,16 @@ async function changeMode(chatId, userPrompt) {
   try {
     const client = await Client.connect("Qwen/Qwen2.5-72B-Instruct");
     const result = await client.predict("/model_chat", {
-      query: `Categorize the user request and respond with one word:
+      query: `You are an AI designed to categorize user requests and respond with a single word. Follow these rules strictly:
 
-      • "response" for general queries (math, facts, etc.)
-      • "image" for image generation requests
-      • "video" for video generation requests
-      • If unclear or irrelevant, respond with "response"
+      • If the user request is a general text-based query (e.g., math problems, asking about a person, facts about animals), respond with: "response"
+      • If the user request is about generating an image (e.g., drawing a character, creating a visual scene), respond with: "image"
+      • If the user request is about generating a video (e.g., a video of animals, scenes with specific actions), respond with: "video"
+      • If the request doesn't fit these categories or is nonsensical, respond with: "response"
       
-      User request: ${userPrompt}`,
+      Now, here's the user's request: ${userPrompt}`,
       history: [],
-      system: `You can answer with only ONE word.`,
+      system: `You can answer with only ONE word. ${dataAboutUser.textContext ? `Our chat history: ${dataAboutUser.textContext}` : ``}`,
     });
 
     switch (result.data[1][0][1]) {
