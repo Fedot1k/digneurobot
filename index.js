@@ -31,6 +31,7 @@ async function intro(chatId) {
     });
 
     dataAboutUser.textContext = [];
+    dataAboutUser.userAction = "regular";
     fs.writeFileSync("DB.json", JSON.stringify({ usersData }, null, 2));
   } catch (error) {
     errorData(chatId, dataAboutUser.login, `${String(error)}`);
@@ -244,6 +245,18 @@ async function getImage(chatId, userPrompt) {
     bot.deleteMessage(chatId, dataAboutUser.requestMessageId);
 
     await bot.sendPhoto(chatId, result.data[0].url);
+
+    if (result.data[0] && dataAboutUser.textContext) {
+      dataAboutUser.textContext.push(userPrompt);
+      dataAboutUser.textContext.push(`Created image by user prompt: ${userPrompt}`);
+    }
+
+    if (dataAboutUser.textContext && dataAboutUser.textContext.length > 5) {
+      dataAboutUser.textContext.shift();
+      dataAboutUser.textContext.shift();
+    }
+
+    fs.writeFileSync("DB.json", JSON.stringify({ usersData }, null, 2));
   } catch (error) {
     failedRequest(chatId);
     errorData(chatId, dataAboutUser.login, `${String(error)}`, `image`);
@@ -267,6 +280,18 @@ async function getVideo(chatId, userPrompt) {
     bot.deleteMessage(chatId, dataAboutUser.requestMessageId);
 
     await bot.sendVideo(chatId, result.data[0].video.url);
+
+    if (result.data[0] && dataAboutUser.textContext) {
+      dataAboutUser.textContext.push(userPrompt);
+      dataAboutUser.textContext.push(`Created video by user request: ${userPrompt}`);
+    }
+
+    if (dataAboutUser.textContext && dataAboutUser.textContext.length > 5) {
+      dataAboutUser.textContext.shift();
+      dataAboutUser.textContext.shift();
+    }
+
+    fs.writeFileSync("DB.json", JSON.stringify({ usersData }, null, 2));
   } catch (error) {
     serverOverload(chatId);
     errorData(chatId, dataAboutUser.login, `${String(error)}`, `video`);
@@ -338,9 +363,6 @@ async function resetTextChat(chatId) {
   const dataAboutUser = usersData.find((obj) => obj.chatId == chatId);
 
   try {
-    dataAboutUser.textContext = [];
-    fs.writeFileSync("DB.json", JSON.stringify({ usersData }, null, 2));
-
     await bot.sendMessage(chatId, `Контекст успешно сброшен ✅<blockquote><b>Напишите свой вопрос в чате.</b></blockquote>`, {
       parse_mode: `HTML`,
       disable_web_page_preview: true,
@@ -348,6 +370,10 @@ async function resetTextChat(chatId) {
         inline_keyboard: [[]],
       },
     });
+
+    dataAboutUser.textContext = [];
+    dataAboutUser.userAction = "regular";
+    fs.writeFileSync("DB.json", JSON.stringify({ usersData }, null, 2));
   } catch (error) {
     errorData(chatId, dataAboutUser.login, `${String(error)}`);
   }
@@ -430,16 +456,20 @@ async function StartAll() {
           resetTextChat(chatId);
           break;
         case `/profile`:
+          dataAboutUser.userAction = `regular`;
+          fs.writeFileSync("DB.json", JSON.stringify({ usersData }, null, 2));
           profile(chatId, `send`);
           break;
         case `/start userInfo`:
           bot.deleteMessage(chatId, userMessage);
           dataAboutUser.userAction = `userInfoInput`;
+          fs.writeFileSync("DB.json", JSON.stringify({ usersData }, null, 2));
           profile(chatId, `userInfo`);
           break;
         case `/start answerType`:
           bot.deleteMessage(chatId, userMessage);
           dataAboutUser.userAction = `answerTypeInput`;
+          fs.writeFileSync("DB.json", JSON.stringify({ usersData }, null, 2));
           profile(chatId, `answerType`);
           break;
       }
@@ -454,11 +484,13 @@ async function StartAll() {
           case `userInfoInput`:
             bot.deleteMessage(chatId, userMessage);
             dataAboutUser.userInfoText = text;
+            fs.writeFileSync("DB.json", JSON.stringify({ usersData }, null, 2));
             profile(chatId, `userInfo`);
             break;
           case `answerTypeInput`:
             bot.deleteMessage(chatId, userMessage);
             dataAboutUser.answerTypeText = text;
+            fs.writeFileSync("DB.json", JSON.stringify({ usersData }, null, 2));
             profile(chatId, `answerType`);
             break;
         }
