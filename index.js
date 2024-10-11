@@ -45,7 +45,7 @@ async function profile(chatId, editSend = `send`) {
     switch (editSend) {
       case `send`:
         await bot
-          .sendMessage(chatId, `👤 <b><i>Профиль</i> • </b><code>${dataAboutUser.chatId}</code> 🔍\n\n<b>Информация о себе для Нейросети:</b><blockquote>${dataAboutUser.selfDataText ? `${dataAboutUser.selfDataText}\n\n<a href="https://t.me/trialdynamicsbot/?start=selfData"><b>Изменить...</b></a>` : `<a href="https://t.me/trialdynamicsbot/?start=selfData"><b>Добавить...</b></a>`}</blockquote>\n\n<b>Какой ответ вы хотели бы получить:</b><blockquote>${dataAboutUser.answerTypeText ? `${dataAboutUser.answerTypeText}\n\n<a href="https://t.me/trialdynamicsbot/?start=answerType"><b>Изменить...</b></a>` : `<a href="https://t.me/trialdynamicsbot/?start=answerType"><b>Добавить...</b></a>`}</blockquote>`, {
+          .sendMessage(chatId, `👤 <b><i>Профиль</i> • </b><code>${dataAboutUser.chatId}</code> 🔍\n\n<b>Информация о себе для Нейросети:</b><blockquote>${dataAboutUser.userInfoText ? `${dataAboutUser.userInfoText}\n\n<a href="https://t.me/trialdynamicsbot/?start=userInfo"><b>Изменить...</b></a>` : `<a href="https://t.me/trialdynamicsbot/?start=userInfo"><b>Добавить...</b></a>`}</blockquote>\n\n<b>Какой ответ вы хотели бы получить:</b><blockquote>${dataAboutUser.answerTypeText ? `${dataAboutUser.answerTypeText}\n\n<a href="https://t.me/trialdynamicsbot/?start=answerType"><b>Изменить...</b></a>` : `<a href="https://t.me/trialdynamicsbot/?start=answerType"><b>Добавить...</b></a>`}</blockquote>`, {
             parse_mode: `HTML`,
             disable_web_page_preview: true,
             reply_markup: {
@@ -68,7 +68,7 @@ async function profile(chatId, editSend = `send`) {
           });
         break;
       case `edit`:
-        await bot.editMessageText(`👤 <b><i>Профиль</i> • </b><code>${dataAboutUser.chatId}</code> 🔍\n\n<b>Информация о себе для Нейросети:</b><blockquote>${dataAboutUser.selfDataText ? `${dataAboutUser.selfDataText}\n\n<a href="https://t.me/trialdynamicsbot/?start=selfData"><b>Изменить...</b></a>` : `<a href="https://t.me/trialdynamicsbot/?start=selfData"><b>Добавить...</b></a>`}</blockquote>\n\n<b>Какой ответ вы хотели бы получить:</b><blockquote>${dataAboutUser.answerTypeText ? `${dataAboutUser.answerTypeText}\n\n<a href="https://t.me/trialdynamicsbot/?start=answerType"><b>Изменить...</b></a>` : `<a href="https://t.me/trialdynamicsbot/?start=answerType"><b>Добавить...</b></a>`}</blockquote>`, {
+        await bot.editMessageText(`👤 <b><i>Профиль</i> • </b><code>${dataAboutUser.chatId}</code> 🔍\n\n<b>Информация о себе для Нейросети:</b><blockquote>${dataAboutUser.userInfoText ? `${dataAboutUser.userInfoText}\n\n<a href="https://t.me/trialdynamicsbot/?start=userInfo"><b>Изменить...</b></a>` : `<a href="https://t.me/trialdynamicsbot/?start=userInfo"><b>Добавить...</b></a>`}</blockquote>\n\n<b>Какой ответ вы хотели бы получить:</b><blockquote>${dataAboutUser.answerTypeText ? `${dataAboutUser.answerTypeText}\n\n<a href="https://t.me/trialdynamicsbot/?start=answerType"><b>Изменить...</b></a>` : `<a href="https://t.me/trialdynamicsbot/?start=answerType"><b>Добавить...</b></a>`}</blockquote>`, {
           parse_mode: `HTML`,
           chat_id: chatId,
           message_id: dataAboutUser.profileMessageId,
@@ -89,25 +89,45 @@ async function profile(chatId, editSend = `send`) {
           },
         });
         break;
-      case `selfData`:
-        await bot.editMessageText(`👤 <b><i>Профиль</i> • </b><code>${dataAboutUser.chatId}</code> 🔍\n\n<b>Информация о себе для Нейросети:</b>${dataAboutUser.selfDataText ? `<blockquote>${dataAboutUser.selfDataText}</blockquote>\n\n<i>Напишите текст в чате, чтобы изменить...</i>` : `<blockquote><i>Напишите текст в чате, чтобы добавить...</i></blockquote>`}`, {
+      case `userInfo`:
+        let userInfoDelete = null;
+        `${
+          dataAboutUser.userInfoText
+            ? (userInfoDelete = [
+                { text: `⬅️Назад`, callback_data: `profile` },
+                { text: `Удалить ✅`, callback_data: `userInfoDelete` },
+              ])
+            : (userInfoDelete = [{ text: `⬅️Назад`, callback_data: `profile` }])
+        }`;
+
+        await bot.editMessageText(`👤 <b><i>Профиль</i> • </b><code>${dataAboutUser.chatId}</code> 🔍\n\n<b>Информация о себе для Нейросети:</b>${dataAboutUser.userInfoText ? `<blockquote>${dataAboutUser.userInfoText}</blockquote>\n\n<i>Напишите текст в чате, чтобы изменить...</i>` : `<blockquote><i>Напишите текст в чате, чтобы добавить...</i></blockquote>`}`, {
           parse_mode: `HTML`,
           chat_id: chatId,
           message_id: dataAboutUser.profileMessageId,
           disable_web_page_preview: true,
           reply_markup: {
-            inline_keyboard: [[{ text: `⬅️Назад`, callback_data: `profile` }]],
+            inline_keyboard: [userInfoDelete],
           },
         });
         break;
       case `answerType`:
+        let answerTypeDelete = null;
+        `${
+          dataAboutUser.answerTypeText
+            ? (answerTypeDelete = [
+                { text: `⬅️Назад`, callback_data: `profile` },
+                { text: `Удалить ✅`, callback_data: `answerTypeDelete` },
+              ])
+            : (answerTypeDelete = [{ text: `⬅️Назад`, callback_data: `profile` }])
+        }`;
+
         await bot.editMessageText(`👤 <b><i>Профиль</i> • </b><code>${dataAboutUser.chatId}</code> 🔍\n\n<b>Какой ответ вы хотели бы получить:</b>${dataAboutUser.answerTypeText ? `<blockquote>${dataAboutUser.answerTypeText}</blockquote>\n\n<i>Напишите текст в чате, чтобы изменить...</i>` : `<blockquote><i>Напишите текст в чате, чтобы добавить...</i></blockquote>`}`, {
           parse_mode: `HTML`,
           chat_id: chatId,
           message_id: dataAboutUser.profileMessageId,
           disable_web_page_preview: true,
           reply_markup: {
-            inline_keyboard: [[{ text: `⬅️Назад`, callback_data: `profile` }]],
+            inline_keyboard: [answerTypeDelete],
           },
         });
         break;
@@ -163,9 +183,13 @@ async function getResponse(chatId, userPrompt) {
   try {
     const client = await Client.connect("Qwen/Qwen2.5-72B-Instruct");
     const result = await client.predict("/model_chat", {
-      query: `${userPrompt}`,
+      query: `${dataAboutUser.textContext ? `Our chat history: ${dataAboutUser.textContext}\n\nMy new request: ` : ``}${userPrompt}`,
       history: [],
-      system: `You are Нейро, created by digfusion. You are a helpful and minimalistic AI Telegram assistant. All your answers are original. Never use emojis and math formatting. ${dataAboutUser.textContext ? `Our chat history: ${dataAboutUser.textContext}` : ``}`,
+      system: `You are Нейро, created by digfusion. You are a helpful and minimalistic AI Telegram assistant. All your answers are original. Never use emojis and math formatting.
+      
+      ${dataAboutUser.userInfoText ? `User info: ${dataAboutUser.userInfoText}` : ``}
+      
+      ${dataAboutUser.answerTypeText ? `Answer type: ${dataAboutUser.answerTypeText}` : ``}`,
     });
 
     bot.deleteMessage(chatId, dataAboutUser.requestMessageId);
@@ -391,7 +415,7 @@ async function StartAll() {
           requestMessageId: null,
           textContext: [],
           userAction: `regular`,
-          selfDataText: ``,
+          userInfoText: ``,
           answerTypeText: ``,
         });
       }
@@ -408,10 +432,10 @@ async function StartAll() {
         case `/profile`:
           profile(chatId, `send`);
           break;
-        case `/start selfData`:
+        case `/start userInfo`:
           bot.deleteMessage(chatId, userMessage);
-          dataAboutUser.userAction = `selfDataInput`;
-          profile(chatId, `selfData`);
+          dataAboutUser.userAction = `userInfoInput`;
+          profile(chatId, `userInfo`);
           break;
         case `/start answerType`:
           bot.deleteMessage(chatId, userMessage);
@@ -427,17 +451,15 @@ async function StartAll() {
             processingRequest(chatId);
             changeMode(chatId, text);
             break;
-          case `selfDataInput`:
+          case `userInfoInput`:
             bot.deleteMessage(chatId, userMessage);
-            dataAboutUser.selfDataText = text;
-            dataAboutUser.userAction = `regular`;
-            profile(chatId, `edit`);
+            dataAboutUser.userInfoText = text;
+            profile(chatId, `userInfo`);
             break;
           case `answerTypeInput`:
             bot.deleteMessage(chatId, userMessage);
             dataAboutUser.answerTypeText = text;
-            dataAboutUser.userAction = `regular`;
-            profile(chatId, `edit`);
+            profile(chatId, `answerType`);
             break;
         }
       }
@@ -469,12 +491,12 @@ async function StartAll() {
         case `about`:
           about(chatId);
           break;
-        case `selfDataTextDelete`:
-          dataAboutUser.selfDataText = ``;
+        case `userInfoDelete`:
+          dataAboutUser.userInfoText = ``;
           fs.writeFileSync("DB.json", JSON.stringify({ usersData }, null, 2));
-          profile(chatId, `selfData`);
+          profile(chatId, `userInfo`);
           break;
-        case `answerTypeTextDelete`:
+        case `answerTypeDelete`:
           dataAboutUser.answerTypeText = ``;
           fs.writeFileSync("DB.json", JSON.stringify({ usersData }, null, 2));
           profile(chatId, `answerType`);
