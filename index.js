@@ -190,7 +190,9 @@ async function getResponse(chatId, userPrompt) {
       
       ${dataAboutUser.userInfoText ? `User info: ${dataAboutUser.userInfoText}` : ``}
       
-      ${dataAboutUser.answerTypeText ? `Answer type: ${dataAboutUser.answerTypeText}` : ``}`,
+      ${dataAboutUser.answerTypeText ? `Answer type: ${dataAboutUser.answerTypeText}` : ``}
+      
+      If user info or answer type will lead to error in telegram parse_mode Markdown, say about it to user and offer changing it.`,
     });
 
     bot.deleteMessage(chatId, dataAboutUser.requestMessageId);
@@ -200,8 +202,7 @@ async function getResponse(chatId, userPrompt) {
     let changingText = progressOutput[0];
 
     await bot
-      .sendMessage(chatId, `${changingText}`, {
-        parse_mode: `HTML`,
+      .sendMessage(chatId, changingText, {
         disable_web_page_preview: true,
         reply_markup: {
           inline_keyboard: [[]],
@@ -211,11 +212,10 @@ async function getResponse(chatId, userPrompt) {
         dataAboutUser.responseMessageId = message.message_id;
       });
 
-    for (let i = 1; i < progressOutput.length - 1; i++) {
-      changingText += ` ${progressOutput[i]}`;
+    for (let i = 1; i < progressOutput.length; i += 7) {
+      changingText += ` ${progressOutput.slice(i, i + 7).join(" ")}`;
 
-      await bot.editMessageText(`${changingText}`, {
-        parse_mode: `HTML`,
+      await bot.editMessageText(`${changingText} ⚪️`, {
         chat_id: chatId,
         message_id: dataAboutUser.responseMessageId,
         disable_web_page_preview: true,
@@ -227,19 +227,15 @@ async function getResponse(chatId, userPrompt) {
       await new Promise((resolve) => setTimeout(resolve, 50));
     }
 
-    if (progressOutput.length != 1) {
-      changingText += ` ${progressOutput[progressOutput.length - 1]}`;
-
-      await bot.editMessageText(`${changingText}`, {
-        parse_mode: `MarkDown`,
-        chat_id: chatId,
-        message_id: dataAboutUser.responseMessageId,
-        disable_web_page_preview: true,
-        reply_markup: {
-          inline_keyboard: [[]],
-        },
-      });
-    }
+    await bot.editMessageText(changingText, {
+      parse_mode: `Markdown`,
+      chat_id: chatId,
+      message_id: dataAboutUser.responseMessageId,
+      disable_web_page_preview: true,
+      reply_markup: {
+        inline_keyboard: [[]],
+      },
+    });
 
     if (result.data[1][0][1] && dataAboutUser.textContext) {
       dataAboutUser.textContext.push(userPrompt);
