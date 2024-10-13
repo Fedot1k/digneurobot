@@ -199,6 +199,10 @@ async function getResponse(chatId, userPrompt) {
 
     let progressOutput = result.data[1][0][1].split(" ");
 
+    let outputSpeed = 7;
+
+    `${progressOutput.length > 50 ? outputSpeed == 25 : ``}`;
+
     let changingText = progressOutput[0];
 
     await bot
@@ -212,8 +216,8 @@ async function getResponse(chatId, userPrompt) {
         dataAboutUser.responseMessageId = message.message_id;
       });
 
-    for (let i = 1; i < progressOutput.length; i += 7) {
-      changingText += ` ${progressOutput.slice(i, i + 7).join(" ")}`;
+    for (let i = 1; i < progressOutput.length; i += outputSpeed) {
+      changingText += ` ${progressOutput.slice(i, i + outputSpeed).join(" ")}`;
 
       await bot.editMessageText(`${changingText} ⚪️`, {
         chat_id: chatId,
