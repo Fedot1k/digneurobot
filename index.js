@@ -163,7 +163,7 @@ async function digfusion(chatId) {
 
   try {
     await bot.editMessageText(`<b><i>❔digfusion • О нас</i></b><blockquote>Компания <b><i>digfusion</i></b> - <b>начинающий стартап,</b> разрабатывающий <b>свои приложения</b> и предоставляющий услуги по <b>созданию чат-ботов</b> различных типов!\n\nПросмотреть все <b>наши проекты, реальные отзывы, каталог услуг</b> и <b>прочую информацию о компании</b> можно в нашем <b>Telegram канале</b> и <b>боте-консультанте!</b></blockquote>\n\n<b><a href="https://t.me/digfusion">digfusion | инфо</a> • <a href="https://t.me/digfusionbot">digfusion | услуги</a></b>`, {
-      parse_mode: "html",
+      parse_mode: "HTML",
       chat_id: chatId,
       message_id: dataAboutUser.profileMessageId,
       disable_web_page_preview: true,
@@ -195,13 +195,51 @@ async function getResponse(chatId, userPrompt) {
 
     bot.deleteMessage(chatId, dataAboutUser.requestMessageId);
 
-    await bot.sendMessage(chatId, `${result.data[1][0][1]}`, {
-      parse_mode: `MarkDown`,
-      disable_web_page_preview: true,
-      reply_markup: {
-        inline_keyboard: [[]],
-      },
-    });
+    let progressOutput = result.data[1][0][1].split(" ");
+
+    let changingText = progressOutput[0];
+
+    await bot
+      .sendMessage(chatId, `${changingText}`, {
+        parse_mode: `HTML`,
+        disable_web_page_preview: true,
+        reply_markup: {
+          inline_keyboard: [[]],
+        },
+      })
+      .then((message) => {
+        dataAboutUser.responseMessageId = message.message_id;
+      });
+
+    for (let i = 1; i < progressOutput.length - 1; i++) {
+      changingText += ` ${progressOutput[i]}`;
+
+      await bot.editMessageText(`${changingText}`, {
+        parse_mode: `HTML`,
+        chat_id: chatId,
+        message_id: dataAboutUser.responseMessageId,
+        disable_web_page_preview: true,
+        reply_markup: {
+          inline_keyboard: [[]],
+        },
+      });
+
+      await new Promise((resolve) => setTimeout(resolve, 50));
+    }
+
+    if (progressOutput.length != 1) {
+      changingText += ` ${progressOutput[progressOutput.length - 1]}`;
+
+      await bot.editMessageText(`${changingText}`, {
+        parse_mode: `MarkDown`,
+        chat_id: chatId,
+        message_id: dataAboutUser.responseMessageId,
+        disable_web_page_preview: true,
+        reply_markup: {
+          inline_keyboard: [[]],
+        },
+      });
+    }
 
     if (result.data[1][0][1] && dataAboutUser.textContext) {
       dataAboutUser.textContext.push(userPrompt);
@@ -439,6 +477,7 @@ async function StartAll() {
           login: message.from.first_name,
           profileMessageId: null,
           requestMessageId: null,
+          responseMessageId: null,
           textContext: [],
           userAction: `regular`,
           userInfoText: ``,
