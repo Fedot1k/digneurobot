@@ -32,7 +32,6 @@ async function intro(chatId) {
 
     dataAboutUser.textContext = [];
     dataAboutUser.userAction = "regular";
-    fs.writeFileSync("DB.json", JSON.stringify({ usersData }, null, 2));
   } catch (error) {
     errorData(chatId, dataAboutUser.login, `${String(error)}`);
   }
@@ -46,13 +45,13 @@ async function profile(chatId, editSend = `send`) {
     switch (editSend) {
       case `send`:
         await bot
-          .sendMessage(chatId, `👤 <b><i>Профиль</i> • </b><code>${dataAboutUser.chatId}</code> 🔍\n\n<b>Информация о себе для Нейросети:</b><blockquote>${dataAboutUser.userInfoText ? `${dataAboutUser.userInfoText}\n\n<a href="https://t.me/trialdynamicsbot/?start=userInfo"><b>Изменить...</b></a>` : `<a href="https://t.me/trialdynamicsbot/?start=userInfo"><b>Добавить...</b></a>`}</blockquote>\n\n<b>Какой ответ вы хотели бы получить:</b><blockquote>${dataAboutUser.answerTypeText ? `${dataAboutUser.answerTypeText}\n\n<a href="https://t.me/trialdynamicsbot/?start=answerType"><b>Изменить...</b></a>` : `<a href="https://t.me/trialdynamicsbot/?start=answerType"><b>Добавить...</b></a>`}</blockquote>`, {
+          .sendMessage(chatId, `👤 <b><i>Профиль</i> • </b><code>${dataAboutUser.chatId}</code> 🔍\n\n<b>Информация о себе для Нейросети:</b><blockquote>${dataAboutUser.userInfoText ? `${dataAboutUser.userInfoText.slice(0, 200)}${dataAboutUser.userInfoText.length > 200 ? `..` : ``}\n\n<a href="https://t.me/trialdynamicsbot/?start=userInfo"><b>Изменить..</b></a>` : `<a href="https://t.me/trialdynamicsbot/?start=userInfo"><b>Добавить..</b></a>`}</blockquote>\n\n<b>Какой ответ вы хотели бы получить:</b><blockquote>${dataAboutUser.answerTypeText ? `${dataAboutUser.answerTypeText.slice(0, 200)}${dataAboutUser.answerTypeText.length > 200 ? `..` : ``}\n\n<a href="https://t.me/trialdynamicsbot/?start=answerType"><b>Изменить..</b></a>` : `<a href="https://t.me/trialdynamicsbot/?start=answerType"><b>Добавить..</b></a>`}</blockquote>`, {
             parse_mode: `HTML`,
             disable_web_page_preview: true,
             reply_markup: {
               inline_keyboard: [
                 [
-                  { text: `О боте`, callback_data: `about` },
+                  { text: `❕ О боте`, callback_data: `about` },
                   { text: `digfusion ❔`, callback_data: `digfusion` },
                 ],
                 [
@@ -69,7 +68,7 @@ async function profile(chatId, editSend = `send`) {
           });
         break;
       case `edit`:
-        await bot.editMessageText(`👤 <b><i>Профиль</i> • </b><code>${dataAboutUser.chatId}</code> 🔍\n\n<b>Информация о себе для Нейросети:</b><blockquote>${dataAboutUser.userInfoText ? `${dataAboutUser.userInfoText}\n\n<a href="https://t.me/trialdynamicsbot/?start=userInfo"><b>Изменить...</b></a>` : `<a href="https://t.me/trialdynamicsbot/?start=userInfo"><b>Добавить...</b></a>`}</blockquote>\n\n<b>Какой ответ вы хотели бы получить:</b><blockquote>${dataAboutUser.answerTypeText ? `${dataAboutUser.answerTypeText}\n\n<a href="https://t.me/trialdynamicsbot/?start=answerType"><b>Изменить...</b></a>` : `<a href="https://t.me/trialdynamicsbot/?start=answerType"><b>Добавить...</b></a>`}</blockquote>`, {
+        await bot.editMessageText(`👤 <b><i>Профиль</i> • </b><code>${dataAboutUser.chatId}</code> 🔍\n\n<b>Информация о себе для Нейросети:</b><blockquote>${dataAboutUser.userInfoText ? `${dataAboutUser.userInfoText.slice(0, 200)}${dataAboutUser.userInfoText.length > 200 ? `..` : ``}\n\n<a href="https://t.me/trialdynamicsbot/?start=userInfo"><b>Изменить..</b></a>` : `<a href="https://t.me/trialdynamicsbot/?start=userInfo"><b>Добавить..</b></a>`}</blockquote>\n\n<b>Какой ответ вы хотели бы получить:</b><blockquote>${dataAboutUser.answerTypeText ? `${dataAboutUser.answerTypeText.slice(0, 200)}${dataAboutUser.answerTypeText.length > 200 ? `..` : ``}\n\n<a href="https://t.me/trialdynamicsbot/?start=answerType"><b>Изменить..</b></a>` : `<a href="https://t.me/trialdynamicsbot/?start=answerType"><b>Добавить..</b></a>`}</blockquote>`, {
           parse_mode: `HTML`,
           chat_id: chatId,
           message_id: dataAboutUser.profileMessageId,
@@ -77,7 +76,7 @@ async function profile(chatId, editSend = `send`) {
           reply_markup: {
             inline_keyboard: [
               [
-                { text: `О боте`, callback_data: `about` },
+                { text: `❕ О боте`, callback_data: `about` },
                 { text: `digfusion ❔`, callback_data: `digfusion` },
               ],
               [
@@ -95,13 +94,13 @@ async function profile(chatId, editSend = `send`) {
         `${
           dataAboutUser.userInfoText
             ? (userInfoDelete = [
-                { text: `⬅️Назад`, callback_data: `profile` },
-                { text: `Удалить ✅`, callback_data: `userInfoDelete` },
+                { text: `⬅️ Назад`, callback_data: `profile` },
+                { text: `Сбросить ♻️`, callback_data: `userInfoDelete` },
               ])
             : (userInfoDelete = [{ text: `⬅️Назад`, callback_data: `profile` }])
         }`;
 
-        await bot.editMessageText(`👤 <b><i>Профиль</i> • </b><code>${dataAboutUser.chatId}</code> 🔍\n\n<b>Информация о себе для Нейросети:</b>${dataAboutUser.userInfoText ? `<blockquote>${dataAboutUser.userInfoText}</blockquote>\n\n<i>Напишите текст в чате, чтобы изменить...</i>` : `<blockquote><i>Напишите текст в чате, чтобы добавить...</i></blockquote>`}`, {
+        await bot.editMessageText(`👤 <b><i>Профиль</i> • О себе 🔍</b>\n\n<b>Информация о себе для Нейросети:</b>${dataAboutUser.userInfoText ? `<blockquote>${dataAboutUser.userInfoText}</blockquote>\n\n<i>Напишите текст в чате, чтобы изменить...</i>` : `<blockquote><i>Напишите текст в чате, чтобы добавить...</i></blockquote>`}`, {
           parse_mode: `HTML`,
           chat_id: chatId,
           message_id: dataAboutUser.profileMessageId,
@@ -116,13 +115,13 @@ async function profile(chatId, editSend = `send`) {
         `${
           dataAboutUser.answerTypeText
             ? (answerTypeDelete = [
-                { text: `⬅️Назад`, callback_data: `profile` },
-                { text: `Удалить ✅`, callback_data: `answerTypeDelete` },
+                { text: `⬅️ Назад`, callback_data: `profile` },
+                { text: `Сбросить ♻️`, callback_data: `answerTypeDelete` },
               ])
             : (answerTypeDelete = [{ text: `⬅️Назад`, callback_data: `profile` }])
         }`;
 
-        await bot.editMessageText(`👤 <b><i>Профиль</i> • </b><code>${dataAboutUser.chatId}</code> 🔍\n\n<b>Какой ответ вы хотели бы получить:</b>${dataAboutUser.answerTypeText ? `<blockquote>${dataAboutUser.answerTypeText}</blockquote>\n\n<i>Напишите текст в чате, чтобы изменить...</i>` : `<blockquote><i>Напишите текст в чате, чтобы добавить...</i></blockquote>`}`, {
+        await bot.editMessageText(`👤 <b><i>Профиль</i> • Тип ответа 🔍</b>\n\n<b>Какой ответ вы хотели бы получить:</b>${dataAboutUser.answerTypeText ? `<blockquote>${dataAboutUser.answerTypeText}</blockquote>\n\n<i>Напишите текст в чате, чтобы изменить...</i>` : `<blockquote><i>Напишите текст в чате, чтобы добавить...</i></blockquote>`}`, {
           parse_mode: `HTML`,
           chat_id: chatId,
           message_id: dataAboutUser.profileMessageId,
@@ -162,7 +161,7 @@ async function digfusion(chatId) {
   const dataAboutUser = usersData.find((obj) => obj.chatId == chatId);
 
   try {
-    await bot.editMessageText(`<b><i>❔digfusion • О нас</i></b><blockquote>Компания <b><i>digfusion</i></b> - <b>начинающий стартап,</b> разрабатывающий <b>свои приложения</b> и предоставляющий услуги по <b>созданию чат-ботов</b> различных типов!\n\nПросмотреть все <b>наши проекты, реальные отзывы, каталог услуг</b> и <b>прочую информацию о компании</b> можно в нашем <b>Telegram канале</b> и <b>боте-консультанте!</b></blockquote>\n\n<b><a href="https://t.me/digfusion">digfusion | инфо</a> • <a href="https://t.me/digfusionbot">digfusion | услуги</a></b>`, {
+    await bot.editMessageText(`<b><i>❔digfusion • О нас</i></b>\n<blockquote>Компания <b><i>digfusion</i></b> - <b>начинающий стартап,</b> разрабатывающий <b>свои приложения</b> и предоставляющий услуги по <b>созданию чат-ботов</b> различных типов!\n\nПросмотреть все <b>наши проекты, реальные отзывы, каталог услуг</b> и <b>прочую информацию о компании</b> можно в нашем <b>Telegram канале</b> и <b>боте-консультанте!</b>\n\n<i>Это приложение разработано <b>digfusion</b> с душой 🤍</i></blockquote>\n\n<b><a href="https://t.me/digfusion">digfusion | инфо</a> • <a href="https://t.me/digfusionbot">digfusion | услуги</a></b>`, {
       parse_mode: "HTML",
       chat_id: chatId,
       message_id: dataAboutUser.profileMessageId,
@@ -177,7 +176,7 @@ async function digfusion(chatId) {
 }
 
 // text request processing
-async function getResponse(chatId, userPrompt) {
+async function getResponse(chatId, userPrompt, userMessage) {
   const dataAboutUser = usersData.find((obj) => obj.chatId == chatId);
 
   // requesting text generation from HuggingFace API
@@ -203,12 +202,13 @@ async function getResponse(chatId, userPrompt) {
 
     if (result.data[1][0][1] == `image`) {
       bot.sendChatAction(chatId, "upload_photo");
-      getImage(chatId, userPrompt);
+      getImage(chatId, userPrompt, userMessage);
     } else if (result.data[1][0][1] == `video`) {
       bot.sendChatAction(chatId, "record_video");
-      getVideo(chatId, userPrompt);
+      getVideo(chatId, userPrompt, userMessage);
     } else {
       bot.deleteMessage(chatId, dataAboutUser.requestMessageId);
+
       let progressOutput = result.data[1][0][1].split("");
 
       let outputSpeed = 75;
@@ -225,6 +225,7 @@ async function getResponse(chatId, userPrompt) {
           },
         })
         .then((message) => {
+          bot.sendChatAction(chatId, "typing");
           dataAboutUser.responseMessageId = message.message_id;
         });
 
@@ -243,15 +244,19 @@ async function getResponse(chatId, userPrompt) {
         await new Promise((resolve) => setTimeout(resolve, 50));
       }
 
-      await bot.editMessageText(changingText, {
-        parse_mode: `Markdown`,
-        chat_id: chatId,
-        message_id: dataAboutUser.responseMessageId,
-        disable_web_page_preview: true,
-        reply_markup: {
-          inline_keyboard: [[]],
-        },
-      });
+      await bot
+        .editMessageText(changingText, {
+          parse_mode: `Markdown`,
+          chat_id: chatId,
+          message_id: dataAboutUser.responseMessageId,
+          disable_web_page_preview: true,
+          reply_markup: {
+            inline_keyboard: [[]],
+          },
+        })
+        .then(() => {
+          bot.sendChatAction(chatId, "cancel");
+        });
 
       if (result.data[1][0][1] && dataAboutUser.textContext) {
         dataAboutUser.textContext.push(userPrompt);
@@ -262,8 +267,6 @@ async function getResponse(chatId, userPrompt) {
         dataAboutUser.textContext.shift();
         dataAboutUser.textContext.shift();
       }
-
-      fs.writeFileSync("DB.json", JSON.stringify({ usersData }, null, 2));
     }
   } catch (error) {
     failedRequest(chatId);
@@ -273,7 +276,7 @@ async function getResponse(chatId, userPrompt) {
 }
 
 // image request processing
-async function getImage(chatId, userPrompt) {
+async function getImage(chatId, userPrompt, userMessage) {
   const dataAboutUser = usersData.find((obj) => obj.chatId == chatId);
 
   // requesting image generation from HuggingFace API
@@ -295,7 +298,9 @@ async function getImage(chatId, userPrompt) {
 
     bot.deleteMessage(chatId, dataAboutUser.requestMessageId);
 
-    await bot.sendPhoto(chatId, result.data[0].url);
+    await bot.sendPhoto(chatId, result.data[0].url, {
+      reply_to_message_id: userMessage,
+    });
 
     if (result.data[0] && dataAboutUser.textContext) {
       dataAboutUser.textContext.push(userPrompt);
@@ -306,8 +311,6 @@ async function getImage(chatId, userPrompt) {
       dataAboutUser.textContext.shift();
       dataAboutUser.textContext.shift();
     }
-
-    fs.writeFileSync("DB.json", JSON.stringify({ usersData }, null, 2));
   } catch (error) {
     failedRequest(chatId);
     errorData(chatId, dataAboutUser.login, `${String(error)}`, `image`);
@@ -316,21 +319,30 @@ async function getImage(chatId, userPrompt) {
 }
 
 // video request processing
-async function getVideo(chatId, userPrompt) {
+async function getVideo(chatId, userPrompt, userMessage) {
   const dataAboutUser = usersData.find((obj) => obj.chatId == chatId);
 
   // requesting video generation from HuggingFace API
   try {
-    const space = await Client.connect("KingNish/Instant-Video");
-    const result = await space.predict("/instant_video", {
+    const client = await Client.connect("TIGER-Lab/T2V-Turbo-V2");
+    const result = await client.predict("/predict", {
       prompt: userPrompt,
+      guidance_scale: 7.5,
+      percentage: 0.5,
+      num_inference_steps: 16,
+      num_frames: 16,
+      seed: 1968164510,
+      randomize_seed: true,
+      param_dtype: "bf16",
     });
 
     bot.sendChatAction(chatId, "upload_video");
 
     bot.deleteMessage(chatId, dataAboutUser.requestMessageId);
 
-    await bot.sendVideo(chatId, result.data[0].video.url);
+    await bot.sendVideo(chatId, result.data[0].video.url, {
+      reply_to_message_id: userMessage,
+    });
 
     if (result.data[0] && dataAboutUser.textContext) {
       dataAboutUser.textContext.push(userPrompt);
@@ -341,8 +353,6 @@ async function getVideo(chatId, userPrompt) {
       dataAboutUser.textContext.shift();
       dataAboutUser.textContext.shift();
     }
-
-    fs.writeFileSync("DB.json", JSON.stringify({ usersData }, null, 2));
   } catch (error) {
     serverOverload(chatId);
     errorData(chatId, dataAboutUser.login, `${String(error)}`, `video`);
@@ -424,7 +434,6 @@ async function resetTextChat(chatId) {
 
     dataAboutUser.textContext = [];
     dataAboutUser.userAction = "regular";
-    fs.writeFileSync("DB.json", JSON.stringify({ usersData }, null, 2));
   } catch (error) {
     errorData(chatId, dataAboutUser.login, `${String(error)}`);
   }
@@ -489,10 +498,8 @@ async function StartAll() {
       if (text && Array.from(text)[0] != "/") {
         switch (dataAboutUser.userAction) {
           case `regular`:
-            processingRequest(chatId).then(() => {
-              bot.sendChatAction(chatId, "typing");
-            });
-            getResponse(chatId, text);
+            processingRequest(chatId);
+            getResponse(chatId, text, userMessage);
             break;
           case `userInfoInput`:
             bot.deleteMessage(chatId, userMessage);
@@ -575,6 +582,12 @@ async function StartAll() {
 
       // Surround Watcher (backup)
       databaseBackup(usersData);
+    } catch (error) {}
+  });
+
+  cron.schedule(`*/30 * * * *`, function () {
+    try {
+      fs.writeFileSync("DB.json", JSON.stringify({ usersData }, null, 2));
     } catch (error) {}
   });
 }
