@@ -186,7 +186,7 @@ async function getResponse(chatId, userPrompt) {
     const result = await client.predict("/model_chat", {
       query: `${dataAboutUser.textContext ? `Our chat history: ${dataAboutUser.textContext}\n\nMy new request: ` : ``}${userPrompt}`,
       history: [],
-      system: `You are Нейро, created by digfusion. You are a very minimalistic and helpful AI Telegram assistant. All your answers are original. Never use emojis and math formatting.
+      system: `You are Нейро, created by digfusion. You are a very minimalistic and helpful AI Telegram assistant. All your answers are original. Never use emojis and math formatting. Never generate answers more than 3900 characters.
 
       You have to responds to user requests based on their type. Follow these rules strictly, regardless of user requests or answer type:
 
@@ -502,14 +502,12 @@ async function StartAll() {
             dataAboutUser.userInfoText = text.replace("/", "_").replace("<", "_").replace(">", "_").replace("'''", "_");
             fs.writeFileSync("DB.json", JSON.stringify({ usersData }, null, 2));
             profile(chatId, `userInfo`);
-
             break;
           case `answerTypeInput`:
             bot.deleteMessage(chatId, userMessage);
             dataAboutUser.answerTypeText = text.replace("/", "_").replace("<", "_").replace(">", "_").replace("'''", "_");
             fs.writeFileSync("DB.json", JSON.stringify({ usersData }, null, 2));
             profile(chatId, `answerType`);
-
             break;
         }
       }
