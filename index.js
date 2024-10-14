@@ -195,31 +195,50 @@ async function getResponse(chatId, userPrompt) {
       If user info or answer type will lead to error in telegram parse_mode Markdown, say about it to user and offer changing it.`,
     });
 
-    bot.deleteMessage(chatId, dataAboutUser.requestMessageId);
+    if (result.data[1][0][1] == `image`) {
+      bot.sendChatAction(chatId, "upload_photo");
+      getImage(chatId, userPrompt);
+    } else if (result.data[1][0][1] == `video`) {
+      bot.sendChatAction(chatId, "record_video");
+      getVideo(chatId, userPrompt);
+    } else {
+      bot.deleteMessage(chatId, dataAboutUser.requestMessageId);
+      let progressOutput = result.data[1][0][1].split(" ");
 
-    let progressOutput = result.data[1][0][1].split(" ");
+      let outputSpeed = 7;
 
-    let outputSpeed = 7;
+      `${progressOutput.length > 50 ? outputSpeed == 25 : ``}`;
 
-    `${progressOutput.length > 50 ? outputSpeed == 25 : ``}`;
+      let changingText = progressOutput[0];
 
-    let changingText = progressOutput[0];
+      await bot
+        .sendMessage(chatId, changingText, {
+          disable_web_page_preview: true,
+          reply_markup: {
+            inline_keyboard: [[]],
+          },
+        })
+        .then((message) => {
+          dataAboutUser.responseMessageId = message.message_id;
+        });
 
-    await bot
-      .sendMessage(chatId, changingText, {
-        disable_web_page_preview: true,
-        reply_markup: {
-          inline_keyboard: [[]],
-        },
-      })
-      .then((message) => {
-        dataAboutUser.responseMessageId = message.message_id;
-      });
+      for (let i = 1; i < progressOutput.length; i += outputSpeed) {
+        changingText += ` ${progressOutput.slice(i, i + outputSpeed).join(" ")}`;
 
-    for (let i = 1; i < progressOutput.length; i += outputSpeed) {
-      changingText += ` ${progressOutput.slice(i, i + outputSpeed).join(" ")}`;
+        await bot.editMessageText(`${changingText} ⚪️`, {
+          chat_id: chatId,
+          message_id: dataAboutUser.responseMessageId,
+          disable_web_page_preview: true,
+          reply_markup: {
+            inline_keyboard: [[]],
+          },
+        });
 
-      await bot.editMessageText(`${changingText} ⚪️`, {
+        await new Promise((resolve) => setTimeout(resolve, 50));
+      }
+
+      await bot.editMessageText(changingText, {
+        parse_mode: `Markdown`,
         chat_id: chatId,
         message_id: dataAboutUser.responseMessageId,
         disable_web_page_preview: true,
@@ -228,30 +247,18 @@ async function getResponse(chatId, userPrompt) {
         },
       });
 
-      await new Promise((resolve) => setTimeout(resolve, 50));
+      if (result.data[1][0][1] && dataAboutUser.textContext) {
+        dataAboutUser.textContext.push(userPrompt);
+        dataAboutUser.textContext.push(result.data[1][0][1]);
+      }
+
+      if (dataAboutUser.textContext && dataAboutUser.textContext.length > 5) {
+        dataAboutUser.textContext.shift();
+        dataAboutUser.textContext.shift();
+      }
+
+      fs.writeFileSync("DB.json", JSON.stringify({ usersData }, null, 2));
     }
-
-    await bot.editMessageText(changingText, {
-      parse_mode: `Markdown`,
-      chat_id: chatId,
-      message_id: dataAboutUser.responseMessageId,
-      disable_web_page_preview: true,
-      reply_markup: {
-        inline_keyboard: [[]],
-      },
-    });
-
-    if (result.data[1][0][1] && dataAboutUser.textContext) {
-      dataAboutUser.textContext.push(userPrompt);
-      dataAboutUser.textContext.push(result.data[1][0][1]);
-    }
-
-    if (dataAboutUser.textContext && dataAboutUser.textContext.length > 5) {
-      dataAboutUser.textContext.shift();
-      dataAboutUser.textContext.shift();
-    }
-
-    fs.writeFileSync("DB.json", JSON.stringify({ usersData }, null, 2));
   } catch (error) {
     failedRequest(chatId);
     errorData(chatId, dataAboutUser.login, `${String(error)}`, `response`);
@@ -435,21 +442,6 @@ async function changeMode(chatId, userPrompt) {
       history: [],
       system: `You can answer with only ONE word. ${dataAboutUser.textContext ? `Our chat history: ${dataAboutUser.textContext}` : ``}`,
     });
-
-    switch (result.data[1][0][1]) {
-      case `response`:
-        bot.sendChatAction(chatId, "typing");
-        getResponse(chatId, userPrompt);
-        break;
-      case `image`:
-        bot.sendChatAction(chatId, "upload_photo");
-        getImage(chatId, userPrompt);
-        break;
-      case `video`:
-        bot.sendChatAction(chatId, "record_video");
-        getVideo(chatId, userPrompt);
-        break;
-    }
   } catch (error) {
     errorData(chatId, dataAboutUser.login, `${String(error)}`);
   }
@@ -518,7 +510,8 @@ async function StartAll() {
         switch (dataAboutUser.userAction) {
           case `regular`:
             processingRequest(chatId);
-            changeMode(chatId, text);
+            bot.sendChatAction(chatId, "typing");
+            getResponse(chatId, text);
             break;
           case `userInfoInput`:
             bot.deleteMessage(chatId, userMessage);
