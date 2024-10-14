@@ -187,12 +187,18 @@ async function getResponse(chatId, userPrompt) {
       query: `${dataAboutUser.textContext ? `Our chat history: ${dataAboutUser.textContext}\n\nMy new request: ` : ``}${userPrompt}`,
       history: [],
       system: `You are Нейро, created by digfusion. You are a very minimalistic and helpful AI Telegram assistant. All your answers are original. Never use emojis and math formatting.
+
+      You have to responds to user requests based on their type. Follow these rules strictly, regardless of user requests or answer type:
+
+      1. If the request is about standard information or tasks (e.g., 'solve a math problem,' 'who is Ronaldo'), respond with a standard text-based answer.
+      2. If the request is about generating images (e.g., 'draw Spider-Man,' 'create an image of cows in a field'), respond with a single word: image.
+      3. If the request is about generating videos (e.g., 'video with cats,' 'create a video with a dolphin'), respond with a single word: video.
+      4. If the request doesn't fit any of these categories or seems nonsensical, respond with a standard text-based answer.
+      5. If user info or answer type will lead to error in Telegram (parse_mode Markdown), say about it to user and offer changing answer type.
       
       ${dataAboutUser.userInfoText ? `User info: ${dataAboutUser.userInfoText}` : ``}
       
-      ${dataAboutUser.answerTypeText ? `Answer type: ${dataAboutUser.answerTypeText}` : ``}
-      
-      If user info or answer type will lead to error in telegram parse_mode Markdown, say about it to user and offer changing it.`,
+      ${dataAboutUser.answerTypeText ? `Answer type: ${dataAboutUser.answerTypeText}` : ``}`,
     });
 
     if (result.data[1][0][1] == `image`) {
@@ -203,11 +209,11 @@ async function getResponse(chatId, userPrompt) {
       getVideo(chatId, userPrompt);
     } else {
       bot.deleteMessage(chatId, dataAboutUser.requestMessageId);
-      let progressOutput = result.data[1][0][1].split(" ");
+      let progressOutput = result.data[1][0][1].split("");
 
-      let outputSpeed = 7;
+      let outputSpeed = 75;
 
-      `${progressOutput.length > 50 ? outputSpeed == 25 : ``}`;
+      `${progressOutput.length > 250 ? outputSpeed == 300 : ``}`;
 
       let changingText = progressOutput[0];
 
@@ -223,7 +229,7 @@ async function getResponse(chatId, userPrompt) {
         });
 
       for (let i = 1; i < progressOutput.length; i += outputSpeed) {
-        changingText += ` ${progressOutput.slice(i, i + outputSpeed).join(" ")}`;
+        changingText += `${progressOutput.slice(i, i + outputSpeed).join("")}`;
 
         await bot.editMessageText(`${changingText} ⚪️`, {
           chat_id: chatId,
@@ -424,29 +430,6 @@ async function resetTextChat(chatId) {
   }
 }
 
-// changing AI mode (text, image, video, photo)
-async function changeMode(chatId, userPrompt) {
-  const dataAboutUser = usersData.find((obj) => obj.chatId == chatId);
-
-  try {
-    const client = await Client.connect("Qwen/Qwen2.5-72B-Instruct");
-    const result = await client.predict("/model_chat", {
-      query: `You are an AI designed to categorize user requests and respond with a single word. Follow these rules strictly:
-
-      • If the user request is a general text-based query (e.g., math problems, asking about a person, facts about animals), respond with: "response"
-      • If the user request is about generating an image (e.g., drawing a character, creating a visual scene), respond with: "image"
-      • If the user request is about generating a video (e.g., a video of animals, scenes with specific actions), respond with: "video"
-      • If the request doesn't fit these categories or is nonsensical, respond with: "response"
-      
-      Now, here's the user's request: ${userPrompt}`,
-      history: [],
-      system: `You can answer with only ONE word. ${dataAboutUser.textContext ? `Our chat history: ${dataAboutUser.textContext}` : ``}`,
-    });
-  } catch (error) {
-    errorData(chatId, dataAboutUser.login, `${String(error)}`);
-  }
-}
-
 // master function
 async function StartAll() {
   // getting data from DB.json
@@ -509,21 +492,24 @@ async function StartAll() {
       if (text && Array.from(text)[0] != "/") {
         switch (dataAboutUser.userAction) {
           case `regular`:
-            processingRequest(chatId);
-            bot.sendChatAction(chatId, "typing");
+            processingRequest(chatId).then(() => {
+              bot.sendChatAction(chatId, "typing");
+            });
             getResponse(chatId, text);
             break;
           case `userInfoInput`:
             bot.deleteMessage(chatId, userMessage);
-            dataAboutUser.userInfoText = text;
+            dataAboutUser.userInfoText = text.replace("/", "_").replace("<", "_").replace(">", "_").replace("'''", "_");
             fs.writeFileSync("DB.json", JSON.stringify({ usersData }, null, 2));
             profile(chatId, `userInfo`);
+
             break;
           case `answerTypeInput`:
             bot.deleteMessage(chatId, userMessage);
-            dataAboutUser.answerTypeText = text;
+            dataAboutUser.answerTypeText = text.replace("/", "_").replace("<", "_").replace(">", "_").replace("'''", "_");
             fs.writeFileSync("DB.json", JSON.stringify({ usersData }, null, 2));
             profile(chatId, `answerType`);
+
             break;
         }
       }
