@@ -263,7 +263,7 @@ async function getResponse(chatId, userPrompt, userMessage) {
         dataAboutUser.textContext.push(result.data[1][0][1]);
       }
 
-      if (dataAboutUser.textContext && dataAboutUser.textContext.length > 5) {
+      if (dataAboutUser.textContext && dataAboutUser.textContext.length > 7) {
         dataAboutUser.textContext.shift();
         dataAboutUser.textContext.shift();
       }
@@ -307,7 +307,7 @@ async function getImage(chatId, userPrompt, userMessage) {
       dataAboutUser.textContext.push(`Created image by user prompt: ${userPrompt}`);
     }
 
-    if (dataAboutUser.textContext && dataAboutUser.textContext.length > 5) {
+    if (dataAboutUser.textContext && dataAboutUser.textContext.length > 7) {
       dataAboutUser.textContext.shift();
       dataAboutUser.textContext.shift();
     }
@@ -349,7 +349,7 @@ async function getVideo(chatId, userPrompt, userMessage) {
       dataAboutUser.textContext.push(`Created video by user request: ${userPrompt}`);
     }
 
-    if (dataAboutUser.textContext && dataAboutUser.textContext.length > 5) {
+    if (dataAboutUser.textContext && dataAboutUser.textContext.length > 7) {
       dataAboutUser.textContext.shift();
       dataAboutUser.textContext.shift();
     }
