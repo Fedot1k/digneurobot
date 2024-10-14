@@ -471,19 +471,16 @@ async function StartAll() {
           break;
         case `/profile`:
           dataAboutUser.userAction = `regular`;
-          fs.writeFileSync("DB.json", JSON.stringify({ usersData }, null, 2));
           profile(chatId, `send`);
           break;
         case `/start userInfo`:
           bot.deleteMessage(chatId, userMessage);
           dataAboutUser.userAction = `userInfoInput`;
-          fs.writeFileSync("DB.json", JSON.stringify({ usersData }, null, 2));
           profile(chatId, `userInfo`);
           break;
         case `/start answerType`:
           bot.deleteMessage(chatId, userMessage);
           dataAboutUser.userAction = `answerTypeInput`;
-          fs.writeFileSync("DB.json", JSON.stringify({ usersData }, null, 2));
           profile(chatId, `answerType`);
           break;
       }
@@ -500,13 +497,11 @@ async function StartAll() {
           case `userInfoInput`:
             bot.deleteMessage(chatId, userMessage);
             dataAboutUser.userInfoText = text.replace("/", "_").replace("<", "_").replace(">", "_").replace("'''", "_");
-            fs.writeFileSync("DB.json", JSON.stringify({ usersData }, null, 2));
             profile(chatId, `userInfo`);
             break;
           case `answerTypeInput`:
             bot.deleteMessage(chatId, userMessage);
             dataAboutUser.answerTypeText = text.replace("/", "_").replace("<", "_").replace(">", "_").replace("'''", "_");
-            fs.writeFileSync("DB.json", JSON.stringify({ usersData }, null, 2));
             profile(chatId, `answerType`);
             break;
         }
@@ -530,7 +525,6 @@ async function StartAll() {
       switch (data) {
         case `profile`:
           dataAboutUser.userAction = `regular`;
-          fs.writeFileSync("DB.json", JSON.stringify({ usersData }, null, 2));
           profile(chatId, `edit`);
           break;
         case `digfusion`:
@@ -541,12 +535,10 @@ async function StartAll() {
           break;
         case `userInfoDelete`:
           dataAboutUser.userInfoText = ``;
-          fs.writeFileSync("DB.json", JSON.stringify({ usersData }, null, 2));
           profile(chatId, `userInfo`);
           break;
         case `answerTypeDelete`:
           dataAboutUser.answerTypeText = ``;
-          fs.writeFileSync("DB.json", JSON.stringify({ usersData }, null, 2));
           profile(chatId, `answerType`);
           break;
       }
