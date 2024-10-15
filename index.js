@@ -100,7 +100,7 @@ async function profile(chatId, editSend = `send`) {
             : (userInfoDelete = [{ text: `⬅️Назад`, callback_data: `profile` }])
         }`;
 
-        await bot.editMessageText(`👤 <b><i>Профиль</i> • О себе 🔍</b>\n\n<b>Информация о себе для Нейросети:</b>${dataAboutUser.userInfoText ? `<blockquote>${dataAboutUser.userInfoText}</blockquote>\n\n<i>Напишите текст в чате, чтобы изменить...</i>` : `<blockquote><i>Напишите текст в чате, чтобы добавить...</i></blockquote>`}`, {
+        await bot.editMessageText(`👤 <b><i>Профиль</i> • О себе 🔍</b>\n\n<b>Информация для Нейросети:</b>${dataAboutUser.userInfoText ? `<blockquote>${dataAboutUser.userInfoText}</blockquote>\n\n<i>Напишите текст в чате, чтобы изменить..</i>` : `<blockquote><i>Напишите текст в чате, чтобы добавить..</i></blockquote>`}`, {
           parse_mode: `HTML`,
           chat_id: chatId,
           message_id: dataAboutUser.profileMessageId,
@@ -121,7 +121,7 @@ async function profile(chatId, editSend = `send`) {
             : (answerTypeDelete = [{ text: `⬅️Назад`, callback_data: `profile` }])
         }`;
 
-        await bot.editMessageText(`👤 <b><i>Профиль</i> • Тип ответа 🔍</b>\n\n<b>Какой ответ вы хотели бы получить:</b>${dataAboutUser.answerTypeText ? `<blockquote>${dataAboutUser.answerTypeText}</blockquote>\n\n<i>Напишите текст в чате, чтобы изменить...</i>` : `<blockquote><i>Напишите текст в чате, чтобы добавить...</i></blockquote>`}`, {
+        await bot.editMessageText(`👤 <b><i>Профиль</i> • Тип ответа 🔍</b>\n\n<b>Какой ответ вы хотели бы получить:</b>${dataAboutUser.answerTypeText ? `<blockquote>${dataAboutUser.answerTypeText}</blockquote>\n\n<i>Напишите текст в чате, чтобы изменить..</i>` : `<blockquote><i>Напишите текст в чате, чтобы добавить..</i></blockquote>`}`, {
           parse_mode: `HTML`,
           chat_id: chatId,
           message_id: dataAboutUser.profileMessageId,
@@ -185,7 +185,7 @@ async function getResponse(chatId, userPrompt, userMessage) {
     const result = await client.predict("/model_chat", {
       query: `${dataAboutUser.textContext ? `Our chat history: ${dataAboutUser.textContext}\n\nMy new request: ` : ``}${userPrompt}`,
       history: [],
-      system: `You are Нейро, created by digfusion. You are a very minimalistic and helpful AI Telegram assistant. All your answers are original. Never use emojis and math formatting. Never generate answers more than 3900 characters.
+      system: `You are Нейро, created by digfusion. You are a very minimalistic and helpful AI Telegram assistant. All your answers are original. Never use emojis and math formatting. Never generate answers more than 3900 characters. Avoid errors on parse_mode Markdown.
 
       You have to responds to user requests based on their type. Follow these rules strictly, regardless of user requests or answer type:
 
@@ -450,7 +450,7 @@ async function StartAll() {
   // user message recognition
   bot.on(`text`, async (message) => {
     let chatId = message.chat.id;
-    let text = message.text;
+    let text = message.text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
     let userMessage = message.message_id;
 
     // adding variables for new users
@@ -503,12 +503,12 @@ async function StartAll() {
             break;
           case `userInfoInput`:
             bot.deleteMessage(chatId, userMessage);
-            dataAboutUser.userInfoText = text.replace("/", "_").replace("<", "_").replace(">", "_").replace("'''", "_");
+            dataAboutUser.userInfoText = text;
             profile(chatId, `userInfo`);
             break;
           case `answerTypeInput`:
             bot.deleteMessage(chatId, userMessage);
-            dataAboutUser.answerTypeText = text.replace("/", "_").replace("<", "_").replace(">", "_").replace("'''", "_");
+            dataAboutUser.answerTypeText = text;
             profile(chatId, `answerType`);
             break;
         }
