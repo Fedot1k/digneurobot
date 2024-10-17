@@ -213,9 +213,9 @@ async function getResponse(chatId, userPrompt, userMessage) {
 
       let progressOutput = result.data[1][0][1].split("");
 
-      let outputSpeed = 75;
+      let outputSpeed = 100;
 
-      `${progressOutput.length > 250 ? outputSpeed == 300 : ``}`;
+      `${progressOutput.length > 250 ? outputSpeed == 500 : ``}`;
 
       let changingText = progressOutput[0];
 
