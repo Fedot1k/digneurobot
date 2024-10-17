@@ -26,9 +26,6 @@ async function intro(chatId) {
     await bot.sendMessage(chatId, `Добрo пожаловать в <b>Нейросетивичок</b>. Чтобы задать вопрос, напишите его в чате.\n\n<b>Команды:</b>\n<blockquote>/start - Перезапуск\n/reset - Сброс контекста\n/profile - Профиль</blockquote>`, {
       parse_mode: `HTML`,
       disable_web_page_preview: true,
-      reply_markup: {
-        inline_keyboard: [[]],
-      },
     });
 
     dataAboutUser.textContext = [];
@@ -51,6 +48,7 @@ async function profile(chatId, editSend = `send`) {
             disable_web_page_preview: true,
             reply_markup: {
               inline_keyboard: [
+                [{ text: `${chatId == FedotID ? `Управление 🔥` : ``}`, callback_data: `adminStart` }],
                 [
                   { text: `❕ О боте`, callback_data: `about` },
                   { text: `digfusion ❔`, callback_data: `digfusion` },
@@ -76,6 +74,7 @@ async function profile(chatId, editSend = `send`) {
           disable_web_page_preview: true,
           reply_markup: {
             inline_keyboard: [
+              [{ text: `${chatId == FedotID ? `Управление 🔥` : ``}`, callback_data: `adminStart` }],
               [
                 { text: `❕ О боте`, callback_data: `about` },
                 { text: `digfusion ❔`, callback_data: `digfusion` },
@@ -91,44 +90,34 @@ async function profile(chatId, editSend = `send`) {
         });
         break;
       case `userInfo`:
-        let userInfoDelete = null; // delete button check
-        `${
-          dataAboutUser.userInfoText
-            ? (userInfoDelete = [
-                { text: `⬅️ Назад`, callback_data: `profile` },
-                { text: `Сбросить ♻️`, callback_data: `userInfoDelete` },
-              ])
-            : (userInfoDelete = [{ text: `⬅️Назад`, callback_data: `profile` }])
-        }`;
-
         await bot.editMessageText(`👤 <b><i>Профиль</i> • О себе 🔍</b>\n\n<b>Информация для Нейросети:</b>${dataAboutUser.userInfoText ? `<blockquote>${dataAboutUser.userInfoText}</blockquote>\n\n<i>Напишите текст в чате, чтобы изменить..</i>` : `<blockquote><i>Напишите текст в чате, чтобы добавить..</i></blockquote>`}`, {
           parse_mode: `HTML`,
           chat_id: chatId,
           message_id: dataAboutUser.profileMessageId,
           disable_web_page_preview: true,
           reply_markup: {
-            inline_keyboard: [userInfoDelete],
+            inline_keyboard: [
+              [
+                { text: `⬅️ Назад`, callback_data: `profile` },
+                { text: `${dataAboutUser.userInfoText ? `Сбросить ♻️` : ``}`, callback_data: `userInfoDelete` },
+              ],
+            ],
           },
         });
         break;
       case `answerType`:
-        let answerTypeDelete = null; // delete button check
-        `${
-          dataAboutUser.answerTypeText
-            ? (answerTypeDelete = [
-                { text: `⬅️ Назад`, callback_data: `profile` },
-                { text: `Сбросить ♻️`, callback_data: `answerTypeDelete` },
-              ])
-            : (answerTypeDelete = [{ text: `⬅️Назад`, callback_data: `profile` }])
-        }`;
-
         await bot.editMessageText(`👤 <b><i>Профиль</i> • Тип ответа 🔍</b>\n\n<b>Какой ответ вы хотели бы получить:</b>${dataAboutUser.answerTypeText ? `<blockquote>${dataAboutUser.answerTypeText}</blockquote>\n\n<i>Напишите текст в чате, чтобы изменить..</i>` : `<blockquote><i>Напишите текст в чате, чтобы добавить..</i></blockquote>`}`, {
           parse_mode: `HTML`,
           chat_id: chatId,
           message_id: dataAboutUser.profileMessageId,
           disable_web_page_preview: true,
           reply_markup: {
-            inline_keyboard: [answerTypeDelete],
+            inline_keyboard: [
+              [
+                { text: `⬅️ Назад`, callback_data: `profile` },
+                { text: `${dataAboutUser.answerTypeText ? `Сбросить ♻️` : ``}`, callback_data: `answerTypeDelete` },
+              ],
+            ],
           },
         });
         break;
@@ -220,20 +209,15 @@ async function getResponse(chatId, userPrompt, userMessage) {
 
       let changingText = progressOutput[0];
 
-
       // sending first symbol for editing message
       await bot
         .sendMessage(chatId, changingText, {
           disable_web_page_preview: true,
-          reply_markup: {
-            inline_keyboard: [[]],
-          },
         })
         .then((message) => {
           bot.sendChatAction(chatId, "typing");
           dataAboutUser.responseMessageId = message.message_id;
         });
-
 
       // editing text message with symbols
       for (let i = 1; i < progressOutput.length; i += outputSpeed) {
@@ -243,9 +227,6 @@ async function getResponse(chatId, userPrompt, userMessage) {
           chat_id: chatId,
           message_id: dataAboutUser.responseMessageId,
           disable_web_page_preview: true,
-          reply_markup: {
-            inline_keyboard: [[]],
-          },
         });
 
         await new Promise((resolve) => setTimeout(resolve, 50));
@@ -258,9 +239,6 @@ async function getResponse(chatId, userPrompt, userMessage) {
           chat_id: chatId,
           message_id: dataAboutUser.responseMessageId,
           disable_web_page_preview: true,
-          reply_markup: {
-            inline_keyboard: [[]],
-          },
         })
         .then(() => {
           bot.sendChatAction(chatId, "cancel");
@@ -380,9 +358,6 @@ async function processingRequest(chatId) {
       .sendMessage(chatId, `Ваш запрос обрабатывается...`, {
         parse_mode: `HTML`,
         disable_web_page_preview: true,
-        reply_markup: {
-          inline_keyboard: [[]],
-        },
       })
       .then((message) => {
         dataAboutUser.requestMessageId = message.message_id;
@@ -402,9 +377,6 @@ async function failedRequest(chatId) {
     await bot.sendMessage(chatId, `Возникла техническая ошибка ❌<blockquote><b>Пожалуйста, попробуйте снова.</b></blockquote>`, {
       parse_mode: `HTML`,
       disable_web_page_preview: true,
-      reply_markup: {
-        inline_keyboard: [[]],
-      },
     });
   } catch (error) {
     errorData(chatId, dataAboutUser.login, `${String(error)}`);
@@ -421,9 +393,6 @@ async function serverOverload(chatId) {
     await bot.sendMessage(chatId, `Сервер перегружен ❌<blockquote><b>Попробуйте позже.</b></blockquote>`, {
       parse_mode: `HTML`,
       disable_web_page_preview: true,
-      reply_markup: {
-        inline_keyboard: [[]],
-      },
     });
   } catch (error) {
     errorData(chatId, dataAboutUser.login, `${String(error)}`);
@@ -438,15 +407,67 @@ async function resetTextChat(chatId) {
     await bot.sendMessage(chatId, `Контекст успешно сброшен ✅<blockquote><b>Напишите свой вопрос в чате.</b></blockquote>`, {
       parse_mode: `HTML`,
       disable_web_page_preview: true,
-      reply_markup: {
-        inline_keyboard: [[]],
-      },
     });
 
     dataAboutUser.textContext = [];
     dataAboutUser.userAction = "regular";
   } catch (error) {
     errorData(chatId, dataAboutUser.login, `${String(error)}`);
+  }
+}
+
+// admin bot control
+async function adminControl(startNextSend = `start`) {
+  const dataAboutUser = usersData.find((obj) => obj.chatId == FedotID);
+
+  try {
+    switch (startNextSend) {
+      case `start`:
+        await bot.editMessageText(`Введите текст общего сообщения..`, {
+          parse_mode: `HTML`,
+          chat_id: FedotID,
+          message_id: dataAboutUser.profileMessageId,
+          disable_web_page_preview: true,
+          reply_markup: {
+            inline_keyboard: [[{ text: `⬅️Назад`, callback_data: `profile` }]],
+          },
+        });
+        break;
+      case `next`:
+        await bot.editMessageText(dataAboutUser.userAction, {
+          parse_mode: `HTML`,
+          chat_id: FedotID,
+          message_id: dataAboutUser.profileMessageId,
+          disable_web_page_preview: true,
+          reply_markup: {
+            inline_keyboard: [
+              [
+                { text: `⬅️Назад`, callback_data: `adminStart` },
+                { text: `Отправить ✅`, callback_data: `adminSend` },
+              ],
+            ],
+          },
+        });
+        break;
+      case `send`:
+        for (let i = 0; i < usersData.length; i++) {
+          await bot.sendMessage(FedotID, dataAboutUser.userAction, {
+            parse_mode: `HTML`,
+            disable_web_page_preview: true,
+          });
+        }
+
+        await bot.editMessageText(`Общее сообщение отправлено ✅<blockquote><b>Different Animal. The Same Beast.</b></blockquote>`, {
+          parse_mode: `HTML`,
+          chat_id: FedotID,
+          message_id: dataAboutUser.profileMessageId,
+          disable_web_page_preview: true,
+        });
+        dataAboutUser.userAction = `regular`;
+        break;
+    }
+  } catch (error) {
+    errorData(FedotID, dataAboutUser.login, `${String(error)}`);
   }
 }
 
@@ -522,6 +543,11 @@ async function StartAll() {
             dataAboutUser.answerTypeText = `${text.length <= 750 ? text : text.slice(0, 750)}`;
             profile(chatId, `answerType`);
             break;
+          case `adminInput`:
+            bot.deleteMessage(chatId, userMessage);
+            dataAboutUser.userAction = message.text;
+            adminControl(`next`);
+            break;
         }
       }
 
@@ -550,6 +576,16 @@ async function StartAll() {
           break;
         case `about`:
           about(chatId);
+          break;
+        case `adminStart`:
+          dataAboutUser.userAction = `adminInput`;
+          adminControl(`start`);
+          break;
+        case `adminBack`:
+          adminControl(`start`);
+          break;
+        case `adminSend`:
+          adminControl(`send`);
           break;
         case `userInfoDelete`:
           dataAboutUser.userInfoText = ``;
