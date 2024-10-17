@@ -90,7 +90,7 @@ async function profile(chatId, editSend = `send`) {
         });
         break;
       case `userInfo`:
-        let userInfoDelete = null;
+        let userInfoDelete = null; // delete button check
         `${
           dataAboutUser.userInfoText
             ? (userInfoDelete = [
@@ -111,7 +111,7 @@ async function profile(chatId, editSend = `send`) {
         });
         break;
       case `answerType`:
-        let answerTypeDelete = null;
+        let answerTypeDelete = null; // delete button check
         `${
           dataAboutUser.answerTypeText
             ? (answerTypeDelete = [
@@ -202,6 +202,7 @@ async function getResponse(chatId, userPrompt, userMessage) {
       ${dataAboutUser.answerTypeText ? `Answer type: ${dataAboutUser.answerTypeText}` : `Answer type: none`}`,
     });
 
+    // user request recognition (text, image, video)
     if (result.data[1][0][1] == `image`) {
       bot.sendChatAction(chatId, "upload_photo");
       getImage(chatId, userPrompt, userMessage);
@@ -211,14 +212,15 @@ async function getResponse(chatId, userPrompt, userMessage) {
     } else {
       bot.deleteMessage(chatId, dataAboutUser.requestMessageId);
 
+      // preparing text for progressive output (symbols and speed)
       let progressOutput = result.data[1][0][1].split("");
-
       let outputSpeed = 100;
-
       `${progressOutput.length > 250 ? outputSpeed == 500 : ``}`;
 
       let changingText = progressOutput[0];
 
+
+      // sending first symbol for editing message
       await bot
         .sendMessage(chatId, changingText, {
           disable_web_page_preview: true,
@@ -231,6 +233,8 @@ async function getResponse(chatId, userPrompt, userMessage) {
           dataAboutUser.responseMessageId = message.message_id;
         });
 
+
+      // editing text message with symbols
       for (let i = 1; i < progressOutput.length; i += outputSpeed) {
         changingText += `${progressOutput.slice(i, i + outputSpeed).join("")}`;
 
@@ -246,6 +250,7 @@ async function getResponse(chatId, userPrompt, userMessage) {
         await new Promise((resolve) => setTimeout(resolve, 50));
       }
 
+      // finishing and formatting text message output
       await bot
         .editMessageText(changingText, {
           parse_mode: `Markdown`,
@@ -260,6 +265,7 @@ async function getResponse(chatId, userPrompt, userMessage) {
           bot.sendChatAction(chatId, "cancel");
         });
 
+      // saving chat history to context
       if (result.data[1][0][1] && dataAboutUser.textContext) {
         dataAboutUser.textContext.push(userPrompt);
         dataAboutUser.textContext.push(result.data[1][0][1]);
@@ -304,6 +310,7 @@ async function getImage(chatId, userPrompt, userMessage) {
       reply_to_message_id: userMessage,
     });
 
+    // saving chat history to context
     if (result.data[0] && dataAboutUser.textContext) {
       dataAboutUser.textContext.push(userPrompt);
       dataAboutUser.textContext.push(`Created image by user prompt: ${userPrompt}`);
@@ -346,6 +353,7 @@ async function getVideo(chatId, userPrompt, userMessage) {
       reply_to_message_id: userMessage,
     });
 
+    // saving chat history to context
     if (result.data[0] && dataAboutUser.textContext) {
       dataAboutUser.textContext.push(userPrompt);
       dataAboutUser.textContext.push(`Created video by user request: ${userPrompt}`);
@@ -496,7 +504,7 @@ async function StartAll() {
           break;
       }
 
-      // answering to user request
+      // answering to request and saving user instructions
       if (text && Array.from(text)[0] != "/") {
         switch (dataAboutUser.userAction) {
           case `regular`:
@@ -577,7 +585,7 @@ async function StartAll() {
     }
   });
 
-  // saving data to DB.json
+  // backup DB.json
   cron.schedule(`0 */10 * * *`, function () {
     try {
       fs.writeFileSync("DB.json", JSON.stringify({ usersData }, null, 2));
@@ -587,6 +595,7 @@ async function StartAll() {
     } catch (error) {}
   });
 
+  // saving DB.json
   cron.schedule(`*/30 * * * *`, function () {
     try {
       fs.writeFileSync("DB.json", JSON.stringify({ usersData }, null, 2));
