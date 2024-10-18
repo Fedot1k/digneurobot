@@ -451,7 +451,7 @@ async function adminControl(startNextSend = `start`) {
         break;
       case `send`:
         for (let i = 0; i < usersData.length; i++) {
-          await bot.sendMessage(FedotID, dataAboutUser.userAction, {
+          await bot.sendMessage(usersData[i].chatId, dataAboutUser.userAction, {
             parse_mode: `HTML`,
             disable_web_page_preview: true,
           });
