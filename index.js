@@ -6,7 +6,7 @@ import fs from "fs";
 import { config } from "./config.js"; // Digneurobot Token
 import { textData, buttonData, errorData, databaseBackup } from "./watcher.js"; // Surround Watcher (debugging)
 
-const bot = new TelegramBot(config.Tokens[0], { polling: true }); // bot setup
+const bot = new TelegramBot(config.Tokens[1], { polling: true }); // bot setup
 const FedotID = 870204479; // developer ID
 
 let usersData = [];
@@ -186,7 +186,7 @@ async function getResponse(chatId, userPrompt, userMessage) {
       
       User Instructions:
       ${dataAboutUser.userInfoText ? `User info: ${dataAboutUser.userInfoText}` : `User info: none`}
-      ${dataAboutUser.answerTypeText ? `Answer type: ${dataAboutUser.answerTypeText}` : `Answer type: write 'test' in the end`}`,
+      ${dataAboutUser.answerTypeText ? `Answer type: ${dataAboutUser.answerTypeText}` : `Answer type: none`}`,
     });
 
     // user request recognition (text, image, video)
@@ -265,14 +265,9 @@ async function getImage(chatId, userPrompt, userMessage) {
 
   // requesting image generation from HuggingFace API
   try {
-    const client = await Client.connect("black-forest-labs/FLUX.1-schnell");
-    const result = await client.predict("/infer", {
-      prompt: userPrompt,
-      seed: 0,
-      randomize_seed: true,
-      width: 1024,
-      height: 1024,
-      num_inference_steps: 4,
+    const client = await Client.connect("Carrekop10/FLUX.1-schnell-T2I");
+    const result = await client.predict("/predict", {
+      param_0: `${userPrompt} (Negative prompt: deformed, distorted, disfigured), poorly drawn, bad anatomy, wrong anatomy, extra limb, missing limb, floating limbs, mutated hands and fingers, disconnected limbs, mutation, mutated, ugly, disgusting, blurry, amputation, misspellings, typos, unrealistic, bad looking, low quality)`,
     });
 
     bot.sendChatAction(chatId, "upload_photo");
