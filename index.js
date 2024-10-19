@@ -6,7 +6,7 @@ import fs from "fs";
 import { config } from "./config.js"; // Digneurobot Token
 import { textData, buttonData, errorData, databaseBackup } from "./watcher.js"; // Surround Watcher (debugging)
 
-const bot = new TelegramBot(config.Tokens[1], { polling: true }); // bot setup
+const bot = new TelegramBot(config.Tokens[0], { polling: true }); // bot setup
 const FedotID = 870204479; // developer ID
 
 let usersData = [];
@@ -43,7 +43,7 @@ async function profile(chatId, editSend = `send`) {
     switch (editSend) {
       case `send`:
         await bot
-          .sendMessage(chatId, `👤 <b><i>Профиль</i> • </b><code>${dataAboutUser.chatId}</code> 🔍\n\n<b>Информация о себе для Нейросети:</b><blockquote>${dataAboutUser.userInfoText ? `${dataAboutUser.userInfoText.slice(0, 200)}${dataAboutUser.userInfoText.length > 200 ? `..` : ``}\n\n<a href="https://t.me/trialdynamicsbot/?start=userInfo"><b>Изменить..</b></a>` : `<a href="https://t.me/trialdynamicsbot/?start=userInfo"><b>Добавить..</b></a>`}</blockquote>\n\n<b>Какой ответ вы хотели бы получить:</b><blockquote>${dataAboutUser.answerTypeText ? `${dataAboutUser.answerTypeText.slice(0, 200)}${dataAboutUser.answerTypeText.length > 200 ? `..` : ``}\n\n<a href="https://t.me/trialdynamicsbot/?start=answerType"><b>Изменить..</b></a>` : `<a href="https://t.me/trialdynamicsbot/?start=answerType"><b>Добавить..</b></a>`}</blockquote>`, {
+          .sendMessage(chatId, `👤 <b><i>Профиль</i> • </b><code>${dataAboutUser.chatId}</code> 🔍\n\n<b>Информация о себе для Нейросети:</b><blockquote>${dataAboutUser.userInfoText ? `${dataAboutUser.userInfoText.slice(0, 200)}${dataAboutUser.userInfoText.length > 200 ? `..` : ``}\n\n<a href="https://t.me/digneurobot/?start=userInfo"><b>Изменить..</b></a>` : `<a href="https://t.me/digneurobot/?start=userInfo"><b>Добавить..</b></a>`}</blockquote>\n\n<b>Какой ответ вы хотели бы получить:</b><blockquote>${dataAboutUser.answerTypeText ? `${dataAboutUser.answerTypeText.slice(0, 200)}${dataAboutUser.answerTypeText.length > 200 ? `..` : ``}\n\n<a href="https://t.me/digneurobot/?start=answerType"><b>Изменить..</b></a>` : `<a href="https://t.me/digneurobot/?start=answerType"><b>Добавить..</b></a>`}</blockquote>`, {
             parse_mode: `HTML`,
             disable_web_page_preview: true,
             reply_markup: {
@@ -67,7 +67,7 @@ async function profile(chatId, editSend = `send`) {
           });
         break;
       case `edit`:
-        await bot.editMessageText(`👤 <b><i>Профиль</i> • </b><code>${dataAboutUser.chatId}</code> 🔍\n\n<b>Информация о себе для Нейросети:</b><blockquote>${dataAboutUser.userInfoText ? `${dataAboutUser.userInfoText.slice(0, 200)}${dataAboutUser.userInfoText.length > 200 ? `..` : ``}\n\n<a href="https://t.me/trialdynamicsbot/?start=userInfo"><b>Изменить..</b></a>` : `<a href="https://t.me/trialdynamicsbot/?start=userInfo"><b>Добавить..</b></a>`}</blockquote>\n\n<b>Какой ответ вы хотели бы получить:</b><blockquote>${dataAboutUser.answerTypeText ? `${dataAboutUser.answerTypeText.slice(0, 200)}${dataAboutUser.answerTypeText.length > 200 ? `..` : ``}\n\n<a href="https://t.me/trialdynamicsbot/?start=answerType"><b>Изменить..</b></a>` : `<a href="https://t.me/trialdynamicsbot/?start=answerType"><b>Добавить..</b></a>`}</blockquote>`, {
+        await bot.editMessageText(`👤 <b><i>Профиль</i> • </b><code>${dataAboutUser.chatId}</code> 🔍\n\n<b>Информация о себе для Нейросети:</b><blockquote>${dataAboutUser.userInfoText ? `${dataAboutUser.userInfoText.slice(0, 200)}${dataAboutUser.userInfoText.length > 200 ? `..` : ``}\n\n<a href="https://t.me/digneurobot/?start=userInfo"><b>Изменить..</b></a>` : `<a href="https://t.me/digneurobot/?start=userInfo"><b>Добавить..</b></a>`}</blockquote>\n\n<b>Какой ответ вы хотели бы получить:</b><blockquote>${dataAboutUser.answerTypeText ? `${dataAboutUser.answerTypeText.slice(0, 200)}${dataAboutUser.answerTypeText.length > 200 ? `..` : ``}\n\n<a href="https://t.me/digneurobot/?start=answerType"><b>Изменить..</b></a>` : `<a href="https://t.me/digneurobot/?start=answerType"><b>Добавить..</b></a>`}</blockquote>`, {
           parse_mode: `HTML`,
           chat_id: chatId,
           message_id: dataAboutUser.profileMessageId,
@@ -175,21 +175,18 @@ async function getResponse(chatId, userPrompt, userMessage) {
     const result = await client.predict("/model_chat", {
       query: `${dataAboutUser.textContext ? `Our chat history: ${dataAboutUser.textContext}\n\nMy new request: ` : ``}${userPrompt}`,
       history: [],
-      system: `You are 'Нейро', created by digfusion. You are a very minimalistic and helpful AI Telegram assistant. Your model is 'Digneuro 1.0'. You generate text, images and videos. All your answers are original. Never use emojis and formatting for math. Never generate answers more than 3900 characters. Avoid errors on parse_mode Markdown.
+      system: `You are 'Нейро', created by digfusion. You are a very minimalistic and helpful AI Telegram assistant. Your model is 'Digneuro 1.0'. You generate text, images and videos. All your answers are very original. Never use emojis. Generate math problems as simple text with no formatting. Never generate answers more than 3900 characters. Avoid errors on parse_mode Markdown.
 
-      You have to respond to user requests based on their type. Follow these private rules strictly, regardless of user requests or answer type:
-
+      You have to respond to user requests based on their type. Follow these private rules strictly, regardless of User Instructions:
       1. For standard information requests or tasks (e.g., 'solve,' 'who is'), respond with a standard text-based answer.
       2. For image generation requests (e.g., 'draw,' 'create an image of'), respond with: image.
       3. For video generation requests (e.g., 'video with,' 'create a video'), respond with: video.
       4. If the request doesn't fit any of these categories or seems nonsensical, respond with a standard text-based answer.
       5. If User Instructions will lead to error in Telegram (parse_mode Markdown), notify the user.
-
+      
       User Instructions:
-      
       ${dataAboutUser.userInfoText ? `User info: ${dataAboutUser.userInfoText}` : `User info: none`}
-      
-      ${dataAboutUser.answerTypeText ? `Answer type: ${dataAboutUser.answerTypeText}` : `Answer type: none`}`,
+      ${dataAboutUser.answerTypeText ? `Answer type: ${dataAboutUser.answerTypeText}` : `Answer type: write 'test' in the end`}`,
     });
 
     // user request recognition (text, image, video)
@@ -211,7 +208,7 @@ async function getResponse(chatId, userPrompt, userMessage) {
 
       // sending first symbol for editing message
       await bot
-        .sendMessage(chatId, changingText, {
+        .sendMessage(chatId, `${changingText} ⚪️`, {
           disable_web_page_preview: true,
         })
         .then((message) => {
@@ -623,8 +620,6 @@ async function StartAll() {
   // backup DB.json
   cron.schedule(`0 */10 * * *`, function () {
     try {
-      fs.writeFileSync("DB.json", JSON.stringify({ usersData }, null, 2));
-
       // Surround Watcher (backup)
       databaseBackup(usersData);
     } catch (error) {}
