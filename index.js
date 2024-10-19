@@ -6,7 +6,7 @@ import fs from "fs";
 import { config } from "./config.js"; // Digneurobot Token
 import { textData, buttonData, errorData, databaseBackup } from "./watcher.js"; // Surround Watcher (debugging)
 
-const bot = new TelegramBot(config.Tokens[0], { polling: true }); // bot setup
+const bot = new TelegramBot(config.Tokens[1], { polling: true }); // bot setup
 const FedotID = 870204479; // developer ID
 
 let usersData = [];
@@ -268,17 +268,14 @@ async function getImage(chatId, userPrompt, userMessage) {
 
   // requesting image generation from HuggingFace API
   try {
-    const client = await Client.connect("K00B404/FLUX.1-Dev-Serverless-darn");
-    const result = await client.predict("/query", {
+    const client = await Client.connect("black-forest-labs/FLUX.1-schnell");
+    const result = await client.predict("/infer", {
       prompt: userPrompt,
-      is_negative: `(deformed, distorted, disfigured), poorly drawn, bad anatomy, wrong anatomy, extra limb, missing limb, floating limbs, (mutated hands and fingers), disconnected limbs, mutation, mutated, ugly, disgusting, blurry, amputation, misspellings, typos, unrealistic, bad looking, low quality`,
-      steps: 35,
-      cfg_scale: 7,
-      sampler: "DPM++ 2M Karras",
-      seed: -1,
-      strength: 0.7,
-      huggingface_api_key: "Hello!!",
-      use_dev: false,
+      seed: 0,
+      randomize_seed: true,
+      width: 1024,
+      height: 1024,
+      num_inference_steps: 4,
     });
 
     bot.sendChatAction(chatId, "upload_photo");
@@ -300,7 +297,7 @@ async function getImage(chatId, userPrompt, userMessage) {
       dataAboutUser.textContext.shift();
     }
   } catch (error) {
-    failedRequest(chatId);
+    serverOverload(chatId);
     errorData(chatId, dataAboutUser.login, `${String(error)}`, `image`);
     console.log(error);
   }
@@ -420,54 +417,55 @@ async function resetTextChat(chatId) {
 async function adminControl(startNextSend = `start`) {
   const dataAboutUser = usersData.find((obj) => obj.chatId == FedotID);
 
-  try {
-    switch (startNextSend) {
-      case `start`:
-        await bot.editMessageText(`Введите текст общего сообщения..`, {
-          parse_mode: `HTML`,
-          chat_id: FedotID,
-          message_id: dataAboutUser.profileMessageId,
-          disable_web_page_preview: true,
-          reply_markup: {
-            inline_keyboard: [[{ text: `⬅️Назад`, callback_data: `profile` }]],
-          },
-        });
-        break;
-      case `next`:
-        await bot.editMessageText(dataAboutUser.userAction, {
-          parse_mode: `HTML`,
-          chat_id: FedotID,
-          message_id: dataAboutUser.profileMessageId,
-          disable_web_page_preview: true,
-          reply_markup: {
-            inline_keyboard: [
-              [
-                { text: `⬅️Назад`, callback_data: `adminStart` },
-                { text: `Отправить ✅`, callback_data: `adminSend` },
-              ],
+  switch (startNextSend) {
+    case `start`:
+      await bot.editMessageText(`Введите текст общего сообщения..`, {
+        parse_mode: `HTML`,
+        chat_id: FedotID,
+        message_id: dataAboutUser.profileMessageId,
+        disable_web_page_preview: true,
+        reply_markup: {
+          inline_keyboard: [[{ text: `⬅️Назад`, callback_data: `profile` }]],
+        },
+      });
+      break;
+    case `next`:
+      await bot.editMessageText(dataAboutUser.userAction, {
+        parse_mode: `HTML`,
+        chat_id: FedotID,
+        message_id: dataAboutUser.profileMessageId,
+        disable_web_page_preview: true,
+        reply_markup: {
+          inline_keyboard: [
+            [
+              { text: `⬅️Назад`, callback_data: `adminStart` },
+              { text: `Отправить ✅`, callback_data: `adminSend` },
             ],
-          },
-        });
-        break;
-      case `send`:
-        for (let i = 0; i < usersData.length; i++) {
+          ],
+        },
+      });
+      break;
+    case `send`:
+      for (let i = 0; i < usersData.length; i++) {
+        try {
           await bot.sendMessage(usersData[i].chatId, dataAboutUser.userAction, {
-            parse_mode: `HTML`,
+            parse_mode: "HTML",
             disable_web_page_preview: true,
           });
+        } catch (error) {
+          errorData(usersData[i].chatId, usersData[i].login, `${String(error)}`);
+          continue;
         }
+      }
 
-        await bot.editMessageText(`Общее сообщение отправлено ✅<blockquote><b>Different Animal. The Same Beast.</b></blockquote>`, {
-          parse_mode: `HTML`,
-          chat_id: FedotID,
-          message_id: dataAboutUser.profileMessageId,
-          disable_web_page_preview: true,
-        });
-        dataAboutUser.userAction = `regular`;
-        break;
-    }
-  } catch (error) {
-    errorData(FedotID, dataAboutUser.login, `${String(error)}`);
+      await bot.editMessageText(`Общее сообщение отправлено ✅<blockquote><b>Different Animal. The Same Beast.</b></blockquote>`, {
+        parse_mode: `HTML`,
+        chat_id: FedotID,
+        message_id: dataAboutUser.profileMessageId,
+        disable_web_page_preview: true,
+      });
+      dataAboutUser.userAction = `regular`;
+      break;
   }
 }
 
