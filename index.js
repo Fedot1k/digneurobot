@@ -6,7 +6,7 @@ import fs from "fs";
 import { config } from "./config.js"; // Digneurobot Token
 import { textData, buttonData, errorData, databaseBackup } from "./watcher.js"; // Surround Watcher (debugging)
 
-const bot = new TelegramBot(config.Tokens[0], { polling: true }); // bot setup
+const bot = new TelegramBot(config.Tokens[1], { polling: true }); // bot setup
 const FedotID = 870204479; // developer ID
 
 let usersData = [];
@@ -403,11 +403,11 @@ async function changeMode(chatId, userPrompt, userMessage) {
       system: `You have to respond to user requests based on their type. Follow these rules strictly:
       1. For standard information requests or tasks (e.g., 'solve,' 'who is'), respond with: text.
       2. For image generation requests (e.g., 'draw,' 'create an image of'), respond with 'image'.
-      3. For video generation requests (e.g., 'video with,' 'create a video'), respond with 'video' and english translated prompt (divide with '_-_').
+      3. For video generation requests (e.g., 'video with,' 'create a video'), respond with 'video' and english translated prompt (divide with '___').
       4. If the request doesn't fit any of these categories or seems nonsensical, respond with: text.`,
     });
 
-    let promptDecision = result.data[1][0][1].split(" -_- ");
+    let promptDecision = result.data[1][0][1].split("___");
 
     // user request recognition (text, image, video)
     if (promptDecision[0] == `text`) {
