@@ -1,5 +1,4 @@
 import TelegramBot from "node-telegram-bot-api"; // Telegram, Time, HuggingFace API, File Managing
-import translate from "translate";
 import cron from "node-cron";
 import { Client } from "@gradio/client";
 import fs from "fs";
@@ -148,7 +147,7 @@ async function digfusion(chatId) {
 }
 
 // text request processing
-async function getResponse(chatId, userPrompt) {
+async function getResponse(chatId, userPrompt, userMessage) {
   const dataAboutUser = usersData.find((obj) => obj.chatId == chatId);
 
   // requesting text generation from HuggingFace API
@@ -188,6 +187,7 @@ async function getResponse(chatId, userPrompt) {
     await bot
       .sendMessage(chatId, `${changingText} ⚪️`, {
         disable_web_page_preview: true,
+        reply_to_message_id: userMessage,
       })
       .then((message) => {
         bot.sendChatAction(chatId, "typing");
@@ -232,7 +232,6 @@ async function getResponse(chatId, userPrompt) {
   } catch (error) {
     failedRequest(chatId);
     errorData(chatId, dataAboutUser.login, `${String(error)}`, `response`);
-    console.log(error);
   }
 }
 
@@ -280,7 +279,6 @@ async function getImage(chatId, userPrompt, userMessage) {
   } catch (error) {
     failedRequest(chatId);
     errorData(chatId, dataAboutUser.login, `${String(error)}`, `image`);
-    console.log(error);
   }
 }
 
@@ -288,13 +286,11 @@ async function getImage(chatId, userPrompt, userMessage) {
 async function getVideo(chatId, userPrompt, userMessage) {
   const dataAboutUser = usersData.find((obj) => obj.chatId == chatId);
 
-  const promptTranslate = await translate(userPrompt, { from: "ru", to: "en" });
-
   // requesting video generation from HuggingFace API
   try {
     const client = await Client.connect("TIGER-Lab/T2V-Turbo-V2");
     const result = await client.predict("/predict", {
-      prompt: promptTranslate,
+      prompt: userPrompt,
       guidance_scale: 7.5,
       percentage: 0.5,
       num_inference_steps: 16,
@@ -325,7 +321,6 @@ async function getVideo(chatId, userPrompt, userMessage) {
   } catch (error) {
     serverOverload(chatId);
     errorData(chatId, dataAboutUser.login, `${String(error)}`, `video`);
-    console.log(error);
   }
 }
 
@@ -407,26 +402,27 @@ async function changeMode(chatId, userPrompt, userMessage) {
       history: [],
       system: `You have to respond to user requests based on their type. Follow these rules strictly:
       1. For standard information requests or tasks (e.g., 'solve,' 'who is'), respond with: text.
-      2. For image generation requests (e.g., 'draw,' 'create an image of'), respond with: image.
-      3. For video generation requests (e.g., 'video with,' 'create a video'), respond with: video.
+      2. For image generation requests (e.g., 'draw,' 'create an image of'), respond with 'image'.
+      3. For video generation requests (e.g., 'video with,' 'create a video'), respond with 'video' and english translated prompt (divide with '_-_').
       4. If the request doesn't fit any of these categories or seems nonsensical, respond with: text.`,
     });
 
+    let promptDecision = result.data[1][0][1].split(" -_- ");
+
     // user request recognition (text, image, video)
-    if (result.data[1][0][1] == `text`) {
+    if (promptDecision[0] == `text`) {
       bot.sendChatAction(chatId, "typing");
-      getResponse(chatId, userPrompt);
-    } else if (result.data[1][0][1] == `image`) {
+      getResponse(chatId, userPrompt, userMessage);
+    } else if (promptDecision[0] == `image`) {
       bot.sendChatAction(chatId, "upload_photo");
       getImage(chatId, userPrompt, userMessage);
-    } else if (result.data[1][0][1] == `video`) {
+    } else if (promptDecision[0] == `video`) {
       bot.sendChatAction(chatId, "record_video");
-      getVideo(chatId, userPrompt, userMessage);
+      getVideo(chatId, promptDecision[1], userMessage);
     }
   } catch (error) {
     failedRequest(chatId);
     errorData(chatId, dataAboutUser.login, `${String(error)}`, `response`);
-    console.log(error);
   }
 }
 
@@ -628,8 +624,6 @@ async function StartAll() {
     const dataAboutUser = usersData.find((obj) => obj.chatId == chatId);
 
     try {
-      console.log(photoCaption);
-
       // Surround Watcher (photo)
       textData(chatId, dataAboutUser.login, photoCaption);
     } catch (error) {
