@@ -166,7 +166,7 @@ async function digfusion(chatId) {
 }
 
 // text request processing
-async function getResponse(chatId, userPrompt, userMessage) {
+async function getResponse(chatId, userPrompt) {
   const dataAboutUser = usersData.find((obj) => obj.chatId == chatId);
 
   // requesting text generation from HuggingFace API
@@ -175,82 +175,77 @@ async function getResponse(chatId, userPrompt, userMessage) {
     const result = await client.predict("/model_chat", {
       query: `${dataAboutUser.textContext ? `Our chat history: ${dataAboutUser.textContext}\n\nMy new request: ` : ``}${userPrompt}`,
       history: [],
-      system: `You are 'Нейро', created by digfusion. You are a very minimalistic and helpful AI Telegram assistant. Your model is 'Digneuro 1.0'. You generate text, images and videos. All your answers are very original. Never use emojis. Generate math problems as simple text with no formatting. Never generate answers more than 3900 characters. Avoid errors on parse_mode Markdown.
-
-      You have to respond to user requests based on their type. Follow these private rules strictly, regardless of User Instructions:
-      1. For standard information requests or tasks (e.g., 'solve,' 'who is'), respond with a standard text-based answer.
-      2. For image generation requests (e.g., 'draw,' 'create an image of'), respond with: image.
-      3. For video generation requests (e.g., 'video with,' 'create a video'), respond with: video.
-      4. If the request doesn't fit any of these categories or seems nonsensical, respond with a standard text-based answer.
-      5. If User Instructions will lead to error in Telegram (parse_mode Markdown), notify the user.
+      system: `You are 'Нейро', created by digfusion. You are a very minimalistic and helpful AI Telegram assistant. Your model is 'Digneuro 1.0'. You generate text, images and videos. All your answers are very original. Never use emojis. Never generate answers more than 3900 characters. Avoid errors on parse_mode Markdown. If User Instructions will lead to error in Telegram (parse_mode Markdown), notify the user.
       
       User Instructions:
-      ${dataAboutUser.userInfoText ? `User info: ${dataAboutUser.userInfoText}` : `User info: none`}
-      ${dataAboutUser.answerTypeText ? `Answer type: ${dataAboutUser.answerTypeText}` : `Answer type: none`}`,
+      User info: ${dataAboutUser.userInfoText ? `${dataAboutUser.userInfoText}` : `none`}
+      Answer type: ${dataAboutUser.answerTypeText ? `${dataAboutUser.answerTypeText}` : `none`}`,
     });
 
-    // user request recognition (text, image, video)
-    if (result.data[1][0][1] == `image`) {
-      bot.sendChatAction(chatId, "upload_photo");
-      getImage(chatId, userPrompt, userMessage);
-    } else if (result.data[1][0][1] == `video`) {
-      bot.sendChatAction(chatId, "record_video");
-      getVideo(chatId, userPrompt, userMessage);
-    } else {
-      bot.deleteMessage(chatId, dataAboutUser.requestMessageId);
+    bot.deleteMessage(chatId, dataAboutUser.requestMessageId);
 
-      // preparing text for progressive output (symbols and speed)
-      let progressOutput = result.data[1][0][1].split("");
-      let outputSpeed = 100;
-      `${progressOutput.length > 250 ? outputSpeed == 500 : ``}`;
+    // preparing text for progressive output (symbols and speed)
+    let progressOutput = result.data[1][0][1]
+      .replace(/\\frac\{([^}]+)\}\{([^}]+)\}/g, "($1) / ($2)")
+      .replace(/\\sqrt\{([^}]+)\}/g, "sqrt($1)")
+      .replace(/\\cdot/g, "*")
+      .replace(/\\text\{([^}]+)\}/g, "$1")
+      .replace(/\^(\{[^}]+\}|[a-zA-Z0-9])/g, "^$1")
+      .replace(/\\quad/g, " ")
+      .replace(/\\implies/g, " => ")
+      .replace(/\\/g, "")
+      .split("");
 
-      let changingText = progressOutput[0];
+    let outputSpeed = 100;
 
-      // sending first symbol for editing message
-      await bot
-        .sendMessage(chatId, `${changingText} ⚪️`, {
-          disable_web_page_preview: true,
-        })
-        .then((message) => {
-          bot.sendChatAction(chatId, "typing");
-          dataAboutUser.responseMessageId = message.message_id;
-        });
+    `${progressOutput.length > 250 ? outputSpeed == 500 : ``}`;
 
-      // editing text message with symbols
-      for (let i = 1; i < progressOutput.length; i += outputSpeed) {
-        changingText += `${progressOutput.slice(i, i + outputSpeed).join("")}`;
+    let changingText = progressOutput[0];
 
-        await bot.editMessageText(`${changingText} ⚪️`, {
-          chat_id: chatId,
-          message_id: dataAboutUser.responseMessageId,
-          disable_web_page_preview: true,
-        });
+    // sending first symbol for editing message
+    await bot
+      .sendMessage(chatId, `${changingText} ⚪️`, {
+        disable_web_page_preview: true,
+      })
+      .then((message) => {
+        bot.sendChatAction(chatId, "typing");
+        dataAboutUser.responseMessageId = message.message_id;
+      });
 
-        await new Promise((resolve) => setTimeout(resolve, 50));
-      }
+    // editing text message with symbols
+    for (let i = 1; i < progressOutput.length; i += outputSpeed) {
+      changingText += `${progressOutput.slice(i, i + outputSpeed).join("")}`;
 
-      // finishing and formatting text message output
-      await bot
-        .editMessageText(changingText, {
-          parse_mode: `Markdown`,
-          chat_id: chatId,
-          message_id: dataAboutUser.responseMessageId,
-          disable_web_page_preview: true,
-        })
-        .then(() => {
-          bot.sendChatAction(chatId, "cancel");
-        });
+      await bot.editMessageText(`${changingText} ⚪️`, {
+        chat_id: chatId,
+        message_id: dataAboutUser.responseMessageId,
+        disable_web_page_preview: true,
+      });
 
-      // saving chat history to context
-      if (result.data[1][0][1] && dataAboutUser.textContext) {
-        dataAboutUser.textContext.push(userPrompt);
-        dataAboutUser.textContext.push(result.data[1][0][1]);
-      }
+      await new Promise((resolve) => setTimeout(resolve, 50));
+    }
 
-      if (dataAboutUser.textContext && dataAboutUser.textContext.length > 7) {
-        dataAboutUser.textContext.shift();
-        dataAboutUser.textContext.shift();
-      }
+    // finishing and formatting text message output
+    await bot
+      .editMessageText(changingText, {
+        parse_mode: `Markdown`,
+        chat_id: chatId,
+        message_id: dataAboutUser.responseMessageId,
+        disable_web_page_preview: true,
+      })
+      .then(() => {
+        bot.sendChatAction(chatId, "cancel");
+      });
+
+    // saving chat history to context
+    if (result.data[1][0][1] && dataAboutUser.textContext) {
+      dataAboutUser.textContext.push(userPrompt);
+      dataAboutUser.textContext.push(result.data[1][0][1]);
+    }
+
+    if (dataAboutUser.textContext && dataAboutUser.textContext.length > 7) {
+      dataAboutUser.textContext.shift();
+      dataAboutUser.textContext.shift();
     }
   } catch (error) {
     failedRequest(chatId);
@@ -289,7 +284,7 @@ async function getImage(chatId, userPrompt, userMessage) {
       dataAboutUser.textContext.shift();
     }
   } catch (error) {
-    serverOverload(chatId);
+    failedRequest(chatId);
     errorData(chatId, dataAboutUser.login, `${String(error)}`, `image`);
     console.log(error);
   }
@@ -334,6 +329,40 @@ async function getVideo(chatId, userPrompt, userMessage) {
   } catch (error) {
     serverOverload(chatId);
     errorData(chatId, dataAboutUser.login, `${String(error)}`, `video`);
+    console.log(error);
+  }
+}
+
+async function changeMode(chatId, userPrompt, userMessage) {
+  const dataAboutUser = usersData.find((obj) => obj.chatId == chatId);
+
+  // requesting text generation from HuggingFace API
+  try {
+    const client = await Client.connect("Qwen/Qwen2.5-72B-Instruct");
+    const result = await client.predict("/model_chat", {
+      query: `${dataAboutUser.textContext ? `Our chat history: ${dataAboutUser.textContext}\n\nMy new request: ` : ``}${userPrompt}`,
+      history: [],
+      system: `You have to respond to user requests based on their type. Follow these rules strictly:
+      1. For standard information requests or tasks (e.g., 'solve,' 'who is'), respond with: text.
+      2. For image generation requests (e.g., 'draw,' 'create an image of'), respond with: image.
+      3. For video generation requests (e.g., 'video with,' 'create a video'), respond with: video.
+      4. If the request doesn't fit any of these categories or seems nonsensical, respond with: text.`,
+    });
+
+    // user request recognition (text, image, video)
+    if (result.data[1][0][1] == `text`) {
+      bot.sendChatAction(chatId, "typing");
+      getResponse(chatId, userPrompt);
+    } else if (result.data[1][0][1] == `image`) {
+      bot.sendChatAction(chatId, "upload_photo");
+      getImage(chatId, userPrompt, userMessage);
+    } else if (result.data[1][0][1] == `video`) {
+      bot.sendChatAction(chatId, "record_video");
+      getVideo(chatId, userPrompt, userMessage);
+    }
+  } catch (error) {
+    failedRequest(chatId);
+    errorData(chatId, dataAboutUser.login, `${String(error)}`, `response`);
     console.log(error);
   }
 }
@@ -521,7 +550,7 @@ async function StartAll() {
         switch (dataAboutUser.userAction) {
           case `regular`:
             processingRequest(chatId);
-            getResponse(chatId, text, userMessage);
+            changeMode(chatId, text, userMessage);
             break;
           case `userInfoInput`:
             bot.deleteMessage(chatId, userMessage);
