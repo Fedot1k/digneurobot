@@ -260,9 +260,21 @@ async function getImage(chatId, userPrompt, userMessage) {
 
   // requesting image generation from HuggingFace API
   try {
-    const client = await Client.connect("Carrekop10/FLUX.1-schnell-T2I");
-    const result = await client.predict("/predict", {
-      param_0: `${userPrompt} (Negative prompt: deformed, distorted, disfigured), poorly drawn, bad anatomy, wrong anatomy, extra limb, missing limb, floating limbs, mutated hands and fingers, disconnected limbs, mutation, mutated, ugly, disgusting, blurry, amputation, misspellings, typos, unrealistic, bad looking, low quality)`,
+    const client = await Client.connect("Serg4451D/FLUX.1-Dev-Serverless-darn-enhanced-prompt");
+    const result = await client.predict("/query", {
+      prompt: userPrompt,
+      is_negative: `(deformed, distorted, disfigured), poorly drawn, bad anatomy, wrong anatomy, extra limb, missing limb, floating limbs, (mutated hands and fingers), disconnected limbs, mutation, mutated, ugly, disgusting, blurry, amputation, misspellings, typos, unrealistic, bad looking, low quality`,
+      steps: 35,
+      cfg_scale: 7,
+      sampler: "DPM++ 2M Karras",
+      seed: -1,
+      strength: 0.7,
+      huggingface_api_key: "",
+      use_dev: false,
+      enhance_prompt_style: "",
+      enhance_prompt_option: false,
+      nemo_enhance_prompt_style: "",
+      use_mistral_nemo: false,
     });
 
     bot.sendChatAction(chatId, "upload_photo");
@@ -333,40 +345,6 @@ async function getVideo(chatId, userPrompt, userMessage) {
   }
 }
 
-async function changeMode(chatId, userPrompt, userMessage) {
-  const dataAboutUser = usersData.find((obj) => obj.chatId == chatId);
-
-  // requesting text generation from HuggingFace API
-  try {
-    const client = await Client.connect("Qwen/Qwen2.5-72B-Instruct");
-    const result = await client.predict("/model_chat", {
-      query: `${dataAboutUser.textContext ? `Our chat history: ${dataAboutUser.textContext}\n\nMy new request: ` : ``}${userPrompt}`,
-      history: [],
-      system: `You have to respond to user requests based on their type. Follow these rules strictly:
-      1. For standard information requests or tasks (e.g., 'solve,' 'who is'), respond with: text.
-      2. For image generation requests (e.g., 'draw,' 'create an image of'), respond with: image.
-      3. For video generation requests (e.g., 'video with,' 'create a video'), respond with: video.
-      4. If the request doesn't fit any of these categories or seems nonsensical, respond with: text.`,
-    });
-
-    // user request recognition (text, image, video)
-    if (result.data[1][0][1] == `text`) {
-      bot.sendChatAction(chatId, "typing");
-      getResponse(chatId, userPrompt);
-    } else if (result.data[1][0][1] == `image`) {
-      bot.sendChatAction(chatId, "upload_photo");
-      getImage(chatId, userPrompt, userMessage);
-    } else if (result.data[1][0][1] == `video`) {
-      bot.sendChatAction(chatId, "record_video");
-      getVideo(chatId, userPrompt, userMessage);
-    }
-  } catch (error) {
-    failedRequest(chatId);
-    errorData(chatId, dataAboutUser.login, `${String(error)}`, `response`);
-    console.log(error);
-  }
-}
-
 // request processing message
 async function processingRequest(chatId) {
   const dataAboutUser = usersData.find((obj) => obj.chatId == chatId);
@@ -431,6 +409,40 @@ async function resetTextChat(chatId) {
     dataAboutUser.userAction = "regular";
   } catch (error) {
     errorData(chatId, dataAboutUser.login, `${String(error)}`);
+  }
+}
+
+async function changeMode(chatId, userPrompt, userMessage) {
+  const dataAboutUser = usersData.find((obj) => obj.chatId == chatId);
+
+  // requesting text generation from HuggingFace API
+  try {
+    const client = await Client.connect("Qwen/Qwen2.5-72B-Instruct");
+    const result = await client.predict("/model_chat", {
+      query: `${dataAboutUser.textContext ? `Our chat history: ${dataAboutUser.textContext}\n\nMy new request: ` : ``}${userPrompt}`,
+      history: [],
+      system: `You have to respond to user requests based on their type. Follow these rules strictly:
+      1. For standard information requests or tasks (e.g., 'solve,' 'who is'), respond with: text.
+      2. For image generation requests (e.g., 'draw,' 'create an image of'), respond with: image.
+      3. For video generation requests (e.g., 'video with,' 'create a video'), respond with: video.
+      4. If the request doesn't fit any of these categories or seems nonsensical, respond with: text.`,
+    });
+
+    // user request recognition (text, image, video)
+    if (result.data[1][0][1] == `text`) {
+      bot.sendChatAction(chatId, "typing");
+      getResponse(chatId, userPrompt);
+    } else if (result.data[1][0][1] == `image`) {
+      bot.sendChatAction(chatId, "upload_photo");
+      getImage(chatId, userPrompt, userMessage);
+    } else if (result.data[1][0][1] == `video`) {
+      bot.sendChatAction(chatId, "record_video");
+      getVideo(chatId, userPrompt, userMessage);
+    }
+  } catch (error) {
+    failedRequest(chatId);
+    errorData(chatId, dataAboutUser.login, `${String(error)}`, `response`);
+    console.log(error);
   }
 }
 
