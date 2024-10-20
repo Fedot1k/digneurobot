@@ -7,7 +7,7 @@ import fs from "fs";
 import { config } from "./config.js"; // Digneurobot Token
 import { textData, buttonData, errorData, databaseBackup } from "./watcher.js"; // Surround Watcher (debugging)
 
-const bot = new TelegramBot(config.Tokens[1], { polling: true }); // bot setup
+const bot = new TelegramBot(config.Tokens[0], { polling: true }); // bot setup
 const FedotID = 870204479; // developer ID
 
 let usersData = [];
@@ -157,7 +157,7 @@ async function getResponse(chatId, userPrompt) {
     const result = await client.predict("/model_chat", {
       query: `${dataAboutUser.textContext ? `Our chat history: ${dataAboutUser.textContext}\n\nMy new request: ` : ``}${userPrompt}`,
       history: [],
-      system: `You are 'Нейро', created by digfusion. You are a very minimalistic and helpful AI Telegram assistant. Your model is 'Digneuro 1.0'. You generate text, images and videos. All your answers are very original. Never use emojis. Never generate answers more than 3900 characters. Avoid errors on parse_mode Markdown. If User Instructions will lead to error in Telegram (parse_mode Markdown), notify the user.
+      system: `You are 'Нейро', created by digfusion. You are a very minimalistic and helpful AI Telegram assistant. Your model is 'Digneuro 2.0'. You generate text, images and videos. All your answers are very original. Never use emojis. Never generate answers more than 3900 characters. Avoid errors on parse_mode Markdown. If User Instructions will lead to error in Telegram (parse_mode Markdown), notify the user.
       
       User Instructions:
       User info: ${dataAboutUser.userInfoText ? `${dataAboutUser.userInfoText}` : `none`}
