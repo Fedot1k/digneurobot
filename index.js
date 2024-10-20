@@ -1,4 +1,5 @@
 import TelegramBot from "node-telegram-bot-api"; // Telegram, Time, HuggingFace API, File Managing
+import translate from "translate";
 import cron from "node-cron";
 import { Client } from "@gradio/client";
 import fs from "fs";
@@ -36,37 +37,18 @@ async function intro(chatId) {
 }
 
 // profile message
-async function profile(chatId, editSend = `send`) {
+async function profile(chatId, sectionType = `profile`) {
   const dataAboutUser = usersData.find((obj) => obj.chatId == chatId);
 
   try {
-    switch (editSend) {
+    switch (sectionType) {
       case `send`:
-        await bot
-          .sendMessage(chatId, `👤 <b><i>Профиль</i> • </b><code>${dataAboutUser.chatId}</code> 🔍\n\n<b>Информация о себе для Нейросети:</b><blockquote>${dataAboutUser.userInfoText ? `${dataAboutUser.userInfoText.slice(0, 200)}${dataAboutUser.userInfoText.length > 200 ? `..` : ``}\n\n<a href="https://t.me/digneurobot/?start=userInfo"><b>Изменить..</b></a>` : `<a href="https://t.me/digneurobot/?start=userInfo"><b>Добавить..</b></a>`}</blockquote>\n\n<b>Какой ответ вы хотели бы получить:</b><blockquote>${dataAboutUser.answerTypeText ? `${dataAboutUser.answerTypeText.slice(0, 200)}${dataAboutUser.answerTypeText.length > 200 ? `..` : ``}\n\n<a href="https://t.me/digneurobot/?start=answerType"><b>Изменить..</b></a>` : `<a href="https://t.me/digneurobot/?start=answerType"><b>Добавить..</b></a>`}</blockquote>`, {
-            parse_mode: `HTML`,
-            disable_web_page_preview: true,
-            reply_markup: {
-              inline_keyboard: [
-                [{ text: `${chatId == FedotID ? `Управление 🔥` : ``}`, callback_data: `adminStart` }],
-                [
-                  { text: `❕ О боте`, callback_data: `about` },
-                  { text: `digfusion ❔`, callback_data: `digfusion` },
-                ],
-                [
-                  {
-                    text: `Поддержка 💭`,
-                    url: `https://t.me/digfusionsupport`,
-                  },
-                ],
-              ],
-            },
-          })
-          .then((message) => {
-            dataAboutUser.profileMessageId = message.message_id;
-          });
+        await bot.sendMessage(chatId, "ㅤ").then((message) => {
+          dataAboutUser.profileMessageId = message.message_id;
+          profile(chatId);
+        });
         break;
-      case `edit`:
+      case `profile`:
         await bot.editMessageText(`👤 <b><i>Профиль</i> • </b><code>${dataAboutUser.chatId}</code> 🔍\n\n<b>Информация о себе для Нейросети:</b><blockquote>${dataAboutUser.userInfoText ? `${dataAboutUser.userInfoText.slice(0, 200)}${dataAboutUser.userInfoText.length > 200 ? `..` : ``}\n\n<a href="https://t.me/digneurobot/?start=userInfo"><b>Изменить..</b></a>` : `<a href="https://t.me/digneurobot/?start=userInfo"><b>Добавить..</b></a>`}</blockquote>\n\n<b>Какой ответ вы хотели бы получить:</b><blockquote>${dataAboutUser.answerTypeText ? `${dataAboutUser.answerTypeText.slice(0, 200)}${dataAboutUser.answerTypeText.length > 200 ? `..` : ``}\n\n<a href="https://t.me/digneurobot/?start=answerType"><b>Изменить..</b></a>` : `<a href="https://t.me/digneurobot/?start=answerType"><b>Добавить..</b></a>`}</blockquote>`, {
           parse_mode: `HTML`,
           chat_id: chatId,
@@ -82,7 +64,7 @@ async function profile(chatId, editSend = `send`) {
               [
                 {
                   text: `Поддержка 💭`,
-                  url: `https://t.me/digfusionsupport`,
+                  url: `https://t.me/digsupport`,
                 },
               ],
             ],
@@ -306,11 +288,13 @@ async function getImage(chatId, userPrompt, userMessage) {
 async function getVideo(chatId, userPrompt, userMessage) {
   const dataAboutUser = usersData.find((obj) => obj.chatId == chatId);
 
+  const promptTranslate = await translate(userPrompt, { from: "ru", to: "en" });
+
   // requesting video generation from HuggingFace API
   try {
     const client = await Client.connect("TIGER-Lab/T2V-Turbo-V2");
     const result = await client.predict("/predict", {
-      prompt: userPrompt,
+      prompt: promptTranslate,
       guidance_scale: 7.5,
       percentage: 0.5,
       num_inference_steps: 16,
@@ -600,7 +584,7 @@ async function StartAll() {
       switch (data) {
         case `profile`:
           dataAboutUser.userAction = `regular`;
-          profile(chatId, `edit`);
+          profile(chatId);
           break;
         case `digfusion`:
           digfusion(chatId);

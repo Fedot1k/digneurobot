@@ -3,7 +3,8 @@
     "node-cron": "^3.0.3",
     "node-telegram-bot-api": "^0.66.0",
     "nodemon": "^3.1.7",
-    "python-shell": "^5.0.0"
+    "python-shell": "^5.0.0",
+    "translate": "^3.0.1"
   },
   "name": "digneurobot",
   "version": "1.0.0",
