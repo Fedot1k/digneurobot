@@ -14,7 +14,7 @@
 
 • **FLUX.1** - Image Generating
 
-• **Instant Video** - Video Generating
+• **Turbo 2** - Video Generating
 
 [digfusion](https://t.me/digfusionbot) • [digfusionsupport](https://t.me/digfusionsupport)
 
