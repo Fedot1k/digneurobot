@@ -16,6 +16,6 @@
 
 • **Turbo 2** - Video Generating
 
-[digfusion](https://t.me/digfusionbot) • [digfusionsupport](https://t.me/digfusionsupport)
+[digfusion](https://t.me/digfusionbot) • [digsupport](https://t.me/digsupport)
 
 > _digfusion 2024_
