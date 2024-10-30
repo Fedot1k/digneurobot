@@ -6,7 +6,7 @@ import fs from "fs";
 import { config } from "./config.js"; // Digneurobot Token
 import { textData, buttonData, errorData, databaseBackup } from "./watcher.js"; // Surround Watcher (debugging)
 
-const bot = new TelegramBot(config.Tokens[0], { polling: true }); // bot setup
+const bot = new TelegramBot(config.Tokens[1], { polling: true }); // bot setup
 const FedotID = 870204479; // developer ID
 
 let usersData = [];
@@ -146,6 +146,59 @@ async function digfusion(chatId) {
   }
 }
 
+// progressive text message output
+async function showResponseText(chatId, progressOutput, userMessage) {
+  const dataAboutUser = usersData.find((obj) => obj.chatId == chatId);
+
+  bot.sendChatAction(chatId, "typing");
+
+  let outputSpeed = 200;
+  `${progressOutput.length > 500 ? outputSpeed == 1000 : ``}`;
+
+  // showing text by sliced chunks
+  try {
+    for (let i = 0; i < progressOutput.length; i += 3000) {
+      let chunkMessage = progressOutput.slice(i, i + 3000);
+      let changingText = chunkMessage[0];
+
+      await bot
+        .sendMessage(chatId, `${changingText} ⚪️`, {
+          disable_web_page_preview: true,
+          reply_to_message_id: `${i == 0 ? userMessage : null}`,
+        })
+        .then((message) => {
+          dataAboutUser.responseMessageId = message.message_id;
+        });
+
+      // editing text message with symbols
+      for (let i = 1; i < chunkMessage.length; i += outputSpeed) {
+        changingText += `${chunkMessage.slice(i, i + outputSpeed).join("")}`;
+
+        await bot.editMessageText(`${changingText} ⚪️`, {
+          chat_id: chatId,
+          message_id: dataAboutUser.responseMessageId,
+          disable_web_page_preview: true,
+        });
+
+        await new Promise((resolve) => setTimeout(resolve, 50));
+      }
+
+      // finishing and formatting text message output
+      await bot.editMessageText(changingText, {
+        parse_mode: `Markdown`,
+        chat_id: chatId,
+        message_id: dataAboutUser.responseMessageId,
+        disable_web_page_preview: true,
+      });
+    }
+
+    bot.sendChatAction(chatId, "cancel");
+  } catch (error) {
+    failedRequest(chatId);
+    errorData(chatId, dataAboutUser.login, `${String(error)}`, `response`);
+  }
+}
+
 // text request processing
 async function getResponse(chatId, userPrompt, userMessage) {
   const dataAboutUser = usersData.find((obj) => obj.chatId == chatId);
@@ -156,7 +209,7 @@ async function getResponse(chatId, userPrompt, userMessage) {
     const result = await client.predict("/model_chat", [
       `${dataAboutUser.textContext ? `Our chat history: ${dataAboutUser.textContext}\n\nMy new request: ` : ``}${userPrompt}`,
       [],
-      `You are 'Нейро', created by digfusion. You are a very minimalistic and helpful AI Telegram assistant. Your model is 'Digneuro 2.0'. You generate text, images and videos. All your answers are very original. Never use emojis. Never generate answers more than 3900 characters. Avoid errors on parse_mode Markdown. If User Instructions will lead to error in Telegram (parse_mode Markdown), notify the user.
+      `You are 'Нейро', created by digfusion. You are a very minimalistic and helpful AI Telegram assistant. Your model is 'Digneuro 2.0'. You generate text, images and videos. All your answers are very original. Never use emojis. Avoid errors on parse_mode Markdown. If User Instructions will lead to error in Telegram (parse_mode Markdown), notify the user.
       
       User Instructions:
       User info: ${dataAboutUser.userInfoText ? `${dataAboutUser.userInfoText}` : `none`}
@@ -188,47 +241,8 @@ async function getResponse(chatId, userPrompt, userMessage) {
       dataAboutUser.textContext.shift();
     }
 
-    let outputSpeed = 100;
-
-    `${progressOutput.length > 250 ? outputSpeed == 500 : ``}`;
-
-    let changingText = progressOutput[0];
-
-    // sending first symbol for editing message
-    await bot
-      .sendMessage(chatId, `${changingText} ⚪️`, {
-        disable_web_page_preview: true,
-        reply_to_message_id: userMessage,
-      })
-      .then((message) => {
-        bot.sendChatAction(chatId, "typing");
-        dataAboutUser.responseMessageId = message.message_id;
-      });
-
-    // editing text message with symbols
-    for (let i = 1; i < progressOutput.length; i += outputSpeed) {
-      changingText += `${progressOutput.slice(i, i + outputSpeed).join("")}`;
-
-      await bot.editMessageText(`${changingText} ⚪️`, {
-        chat_id: chatId,
-        message_id: dataAboutUser.responseMessageId,
-        disable_web_page_preview: true,
-      });
-
-      await new Promise((resolve) => setTimeout(resolve, 50));
-    }
-
-    // finishing and formatting text message output
-    await bot
-      .editMessageText(changingText, {
-        parse_mode: `Markdown`,
-        chat_id: chatId,
-        message_id: dataAboutUser.responseMessageId,
-        disable_web_page_preview: true,
-      })
-      .then(() => {
-        bot.sendChatAction(chatId, "cancel");
-      });
+    // progressively printing out text response
+    showResponseText(chatId, progressOutput, userMessage);
   } catch (error) {
     failedRequest(chatId);
     errorData(chatId, dataAboutUser.login, `${String(error)}`, `response`);
