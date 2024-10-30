@@ -152,16 +152,16 @@ async function getResponse(chatId, userPrompt, userMessage) {
 
   // requesting text generation from HuggingFace API
   try {
-    const client = await Client.connect("Qwen/Qwen2.5-72B-Instruct");
-    const result = await client.predict("/model_chat", {
-      query: `${dataAboutUser.textContext ? `Our chat history: ${dataAboutUser.textContext}\n\nMy new request: ` : ``}${userPrompt}`,
-      history: [],
-      system: `You are 'Нейро', created by digfusion. You are a very minimalistic and helpful AI Telegram assistant. Your model is 'Digneuro 2.0'. You generate text, images and videos. All your answers are very original. Never use emojis. Never generate answers more than 3900 characters. Avoid errors on parse_mode Markdown. If User Instructions will lead to error in Telegram (parse_mode Markdown), notify the user.
+    const client = await Client.connect("Qwen/Qwen2.5-Coder-7B-Instruct");
+    const result = await client.predict("/model_chat", [
+      `${dataAboutUser.textContext ? `Our chat history: ${dataAboutUser.textContext}\n\nMy new request: ` : ``}${userPrompt}`,
+      [],
+      `You are 'Нейро', created by digfusion. You are a very minimalistic and helpful AI Telegram assistant. Your model is 'Digneuro 2.0'. You generate text, images and videos. All your answers are very original. Never use emojis. Never generate answers more than 3900 characters. Avoid errors on parse_mode Markdown. If User Instructions will lead to error in Telegram (parse_mode Markdown), notify the user.
       
       User Instructions:
       User info: ${dataAboutUser.userInfoText ? `${dataAboutUser.userInfoText}` : `none`}
       Answer type: ${dataAboutUser.answerTypeText ? `${dataAboutUser.answerTypeText}` : `none`}`,
-    });
+    ]);
 
     bot.deleteMessage(chatId, dataAboutUser.requestMessageId);
 
@@ -176,6 +176,17 @@ async function getResponse(chatId, userPrompt, userMessage) {
       .replace(/\\implies/g, " => ")
       .replace(/\\/g, "")
       .split("");
+
+    // saving chat history to context
+    if (result.data[1][0][1] && dataAboutUser.textContext) {
+      dataAboutUser.textContext.push(userPrompt);
+      dataAboutUser.textContext.push(result.data[1][0][1]);
+    }
+
+    if (dataAboutUser.textContext && dataAboutUser.textContext.length > 7) {
+      dataAboutUser.textContext.shift();
+      dataAboutUser.textContext.shift();
+    }
 
     let outputSpeed = 100;
 
@@ -218,17 +229,6 @@ async function getResponse(chatId, userPrompt, userMessage) {
       .then(() => {
         bot.sendChatAction(chatId, "cancel");
       });
-
-    // saving chat history to context
-    if (result.data[1][0][1] && dataAboutUser.textContext) {
-      dataAboutUser.textContext.push(userPrompt);
-      dataAboutUser.textContext.push(result.data[1][0][1]);
-    }
-
-    if (dataAboutUser.textContext && dataAboutUser.textContext.length > 7) {
-      dataAboutUser.textContext.shift();
-      dataAboutUser.textContext.shift();
-    }
   } catch (error) {
     failedRequest(chatId);
     errorData(chatId, dataAboutUser.login, `${String(error)}`, `response`);
@@ -391,23 +391,24 @@ async function resetTextChat(chatId) {
   }
 }
 
+// processing and reformatting user request
 async function changeMode(chatId, userPrompt, userMessage) {
   const dataAboutUser = usersData.find((obj) => obj.chatId == chatId);
 
   // requesting text generation from HuggingFace API
   try {
-    const client = await Client.connect("Qwen/Qwen2.5-72B-Instruct");
-    const result = await client.predict("/model_chat", {
-      query: `${dataAboutUser.textContext ? `Our chat history: ${dataAboutUser.textContext}\n\nMy new request: ` : ``}${userPrompt}`,
-      history: [],
-      system: `You have to respond to user requests based on their type. Follow these rules strictly:
+    const client = await Client.connect("Qwen/Qwen2.5-Coder-7B-Instruct");
+    const result = await client.predict("/model_chat", [
+      `${dataAboutUser.textContext ? `Our chat history: ${dataAboutUser.textContext}\n\nMy new request: ` : ``}${userPrompt}`,
+      [],
+      `You have to respond to user requests based on their type and chat history. Follow these rules strictly:
       1. For standard information requests or tasks (e.g., 'solve,' 'who is'), respond with: text.
-      2. For image generation requests (e.g., 'draw,' 'create an image of'), respond with 'image'.
-      3. For video generation requests (e.g., 'video with,' 'create a video'), respond with 'video' and english translated prompt (divide with '___').
+      2. For image generation requests (e.g., 'draw,' 'create an image of', 'now add'), respond with 'image' and what user wants to get as a result (divide with '@').
+      3. For video generation requests (e.g., 'video with,' 'create a video', 'change'), respond with 'video' and what user wants to get as a result in english translated (divide with '@').
       4. If the request doesn't fit any of these categories or seems nonsensical, respond with: text.`,
-    });
+    ]);
 
-    let promptDecision = result.data[1][0][1].split("___");
+    let promptDecision = result.data[1][0][1].split("@");
 
     // user request recognition (text, image, video)
     if (promptDecision[0] == `text`) {
@@ -415,7 +416,7 @@ async function changeMode(chatId, userPrompt, userMessage) {
       getResponse(chatId, userPrompt, userMessage);
     } else if (promptDecision[0] == `image`) {
       bot.sendChatAction(chatId, "upload_photo");
-      getImage(chatId, userPrompt, userMessage);
+      getImage(chatId, promptDecision[1], userMessage);
     } else if (promptDecision[0] == `video`) {
       bot.sendChatAction(chatId, "record_video");
       getVideo(chatId, promptDecision[1], userMessage);
