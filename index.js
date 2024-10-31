@@ -153,12 +153,12 @@ async function showResponseText(chatId, progressOutput, userMessage) {
   bot.sendChatAction(chatId, "typing");
 
   let outputSpeed = 200;
-  `${progressOutput.length > 500 ? outputSpeed == 1000 : ``}`;
+  `${progressOutput.length > 500 ? outputSpeed == 1500 : ``}`;
 
   // showing text by sliced chunks
   try {
-    for (let i = 0; i < progressOutput.length; i += 3000) {
-      let chunkMessage = progressOutput.slice(i, i + 3000);
+    for (let i = 0; i < progressOutput.length; i += 3800) {
+      let chunkMessage = progressOutput.slice(i, i + 3800);
       let changingText = chunkMessage[0];
 
       await bot
@@ -209,7 +209,7 @@ async function getResponse(chatId, userPrompt, userMessage) {
     const result = await client.predict("/model_chat", [
       `${dataAboutUser.textContext ? `Our chat history: ${dataAboutUser.textContext}\n\nMy new request: ` : ``}${userPrompt}`,
       [],
-      `You are 'Нейро', created by digfusion. You are a very minimalistic and helpful AI Telegram assistant. Your model is 'Digneuro 2.0'. You generate text, images and videos. All your answers are very original. Never use emojis. Avoid errors on parse_mode Markdown. If User Instructions will lead to error in Telegram (parse_mode Markdown), notify the user.
+      `You are 'Нейро', created by digfusion. You are a very minimalistic and helpful AI Telegram assistant. Your model is 'Digneuro 2.0'. You generate text, images and videos. All your answers are very original. Avoid errors on parse_mode Markdown. If User Instructions will lead to error in Telegram (parse_mode Markdown), notify the user.
       
       User Instructions:
       User info: ${dataAboutUser.userInfoText ? `${dataAboutUser.userInfoText}` : `none`}
@@ -224,9 +224,30 @@ async function getResponse(chatId, userPrompt, userMessage) {
       .replace(/\\sqrt\{([^}]+)\}/g, "sqrt($1)")
       .replace(/\\cdot/g, "*")
       .replace(/\\text\{([^}]+)\}/g, "$1")
-      .replace(/\^(\{[^}]+\}|[a-zA-Z0-9])/g, "^$1")
+      .replace(/\^(\{([^}]+)\}|[a-zA-Z0-9])/g, "^($2)")
+      .replace(/_(\{([^}]+)\}|[a-zA-Z0-9])/g, "_($2)")
       .replace(/\\quad/g, " ")
       .replace(/\\implies/g, " => ")
+      .replace(/\\rightarrow/g, " -> ")
+      .replace(/\\leftarrow/g, " <- ")
+      .replace(/\\geq/g, " >= ")
+      .replace(/\\leq/g, " <= ")
+      .replace(/\\neq/g, " != ")
+      .replace(/\\approx/g, " ≈ ")
+      .replace(/\\pi/g, "π")
+      .replace(/\\infty/g, "∞")
+      .replace(/\\sum/g, "sum")
+      .replace(/\\int/g, "∫")
+      .replace(/\\lim/g, "lim")
+      .replace(/\\sin/g, "sin")
+      .replace(/\\cos/g, "cos")
+      .replace(/\\tan/g, "tan")
+      .replace(/\\log/g, "log")
+      .replace(/\\ln/g, "ln")
+      .replace(/\\exp\{([^}]+)\}/g, "exp($1)")
+      .replace(/\\overline\{([^}]+)\}/g, "($1)")
+      .replace(/\\underline\{([^}]+)\}/g, "($1)")
+      .replace(/\\binom\{([^}]+)\}\{([^}]+)\}/g, "($1 choose $2)")
       .replace(/\\/g, "")
       .split("");
 
@@ -416,7 +437,7 @@ async function changeMode(chatId, userPrompt, userMessage) {
       `${dataAboutUser.textContext ? `Our chat history: ${dataAboutUser.textContext}\n\nMy new request: ` : ``}${userPrompt}`,
       [],
       `You have to respond to user requests based on their type and chat history. Follow these rules strictly:
-      1. For standard information requests or tasks (e.g., 'solve,' 'who is'), respond with: text.
+      1. For standard information requests or tasks (e.g., 'solve,' 'who is'), respond with only one word and nothing else: 'text'.
       2. For image generation requests (e.g., 'draw,' 'create an image of', 'now add'), respond with 'image' and what user wants to get as a result (divide with '@').
       3. For video generation requests (e.g., 'video with,' 'create a video', 'change'), respond with 'video' and what user wants to get as a result in english translated (divide with '@').
       4. If the request doesn't fit any of these categories or seems nonsensical, respond with: text.`,
