@@ -6,7 +6,7 @@ import fs from "fs";
 import { config } from "./config.js"; // Digneurobot Token
 import { textData, buttonData, errorData, databaseBackup } from "./watcher.js"; // Surround Watcher (debugging)
 
-const bot = new TelegramBot(config.Tokens[0], { polling: true }); // bot setup
+const bot = new TelegramBot(config.Tokens[1], { polling: true }); // bot setup
 const FedotID = 870204479; // developer ID
 
 let usersData = [];
@@ -57,8 +57,8 @@ async function profile(chatId, sectionType = `profile`) {
             inline_keyboard: [
               [{ text: `${chatId == FedotID ? `Управление 🔥` : ``}`, callback_data: `adminStart` }],
               [
-                { text: `❕ О боте`, callback_data: `about` },
-                { text: `digfusion ❔`, callback_data: `digfusion` },
+                { text: `❕О боте`, callback_data: `about` },
+                { text: `digfusion❔`, callback_data: `digfusion` },
               ],
               [
                 {
