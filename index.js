@@ -55,7 +55,7 @@ async function profile(chatId, sectionType = `profile`) {
           disable_web_page_preview: true,
           reply_markup: {
             inline_keyboard: [
-              [{ text: `${chatId == FedotID ? `Управление 🔥` : ``}`, callback_data: `adminStart` }],
+              [{ text: `${chatId == FedotID  ? `Управление 🔥` : ``}`, callback_data: `adminStart` }],
               [
                 { text: `❕О боте`, callback_data: `about` },
                 { text: `digfusion❔`, callback_data: `digfusion` },
@@ -531,7 +531,7 @@ async function StartAll() {
 
     // adding variables for new users
     try {
-      if (!usersData.find((obj) => obj.chatId == chatId)) {
+      if (!usersData?.find((obj) => obj.chatId == chatId)) {
         usersData.push({
           chatId: chatId,
           login: message.from.first_name,
@@ -545,8 +545,9 @@ async function StartAll() {
         });
       }
 
-      const dataAboutUser = usersData.find((obj) => obj.chatId == chatId);
+      const dataAboutUser = usersData?.find((obj) => obj.chatId == chatId);
 
+	  if (dataAboutUser) {
       switch (text) {
         case `/start`:
           intro(chatId);
@@ -594,7 +595,7 @@ async function StartAll() {
             break;
         }
       }
-
+ }
       // Surround Watcher (text)
       textData(chatId, dataAboutUser.login, text);
     } catch (error) {
@@ -607,45 +608,47 @@ async function StartAll() {
     let chatId = query.message.chat.id;
     let data = query.data;
 
-    const dataAboutUser = usersData.find((obj) => obj.chatId == chatId);
+    const dataAboutUser = usersData?.find((obj) => obj.chatId == chatId);
 
-    try {
-      switch (data) {
-        case `profile`:
-          dataAboutUser.userAction = `regular`;
-          profile(chatId);
-          break;
-        case `digfusion`:
-          digfusion(chatId);
-          break;
-        case `about`:
-          about(chatId);
-          break;
-        case `adminStart`:
-          dataAboutUser.userAction = `adminInput`;
-          adminControl(`start`);
-          break;
-        case `adminBack`:
-          adminControl(`start`);
-          break;
-        case `adminSend`:
-          adminControl(`send`);
-          break;
-        case `userInfoDelete`:
-          dataAboutUser.userInfoText = ``;
-          profile(chatId, `userInfo`);
-          break;
-        case `answerTypeDelete`:
-          dataAboutUser.answerTypeText = ``;
-          profile(chatId, `answerType`);
-          break;
-      }
-
+if (dataAboutUser) {
+    try {      
+		switch (data) {
+			case `profile`:
+			  dataAboutUser.userAction = `regular`;
+			  profile(chatId);
+			  break;
+			case `digfusion`:
+			  digfusion(chatId);
+			  break;
+			case `about`:
+			  about(chatId);
+			  break;
+			case `adminStart`:
+			  dataAboutUser.userAction = `adminInput`;
+			  adminControl(`start`);
+			  break;
+			case `adminBack`:
+			  adminControl(`start`);
+			  break;
+			case `adminSend`:
+			  adminControl(`send`);
+			  break;
+			case `userInfoDelete`:
+			  dataAboutUser.userInfoText = ``;
+			  profile(chatId, `userInfo`);
+			  break;
+			case `answerTypeDelete`:
+			  dataAboutUser.answerTypeText = ``;
+			  profile(chatId, `answerType`);
+			  break;
+		  }
+	 
       // Surround Watcher (button)
       buttonData(chatId, dataAboutUser.login, data);
     } catch (error) {
       errorData(chatId, dataAboutUser.login, `${String(error)}`);
     }
+ }
   });
 
   // photo recognition
@@ -665,7 +668,7 @@ async function StartAll() {
   });
 
   // backup DB.json
-  cron.schedule(`0 */10 * * *`, function () {
+  cron.schedule(`0 */12 * * *`, function () {
     try {
       // Surround Watcher (backup)
       databaseBackup(usersData);
