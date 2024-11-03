@@ -6,7 +6,7 @@ import fs from "fs";
 import { config } from "./config.js"; // Digneurobot Token
 import { textData, buttonData, errorData, databaseBackup } from "./watcher.js"; // Surround Watcher (debugging)
 
-const bot = new TelegramBot(config.Tokens[1], { polling: true }); // bot setup
+const bot = new TelegramBot(config.Tokens[0], { polling: true }); // bot setup
 const FedotID = 870204479; // developer ID
 
 let usersData = [];
@@ -183,6 +183,12 @@ async function showResponseText(chatId, progressOutput, userMessage) {
         await new Promise((resolve) => setTimeout(resolve, 50));
       }
 
+      await bot.editMessageText(`${changingText}ㅤ`, {
+        chat_id: chatId,
+        message_id: dataAboutUser.responseMessageId,
+        disable_web_page_preview: true,
+      });
+
       // finishing and formatting text message output
       await bot.editMessageText(changingText, {
         parse_mode: `Markdown`,
@@ -194,7 +200,6 @@ async function showResponseText(chatId, progressOutput, userMessage) {
 
     bot.sendChatAction(chatId, "cancel");
   } catch (error) {
-    failedRequest(chatId);
     errorData(chatId, dataAboutUser.login, `${String(error)}`, `response`);
   }
 }
@@ -205,28 +210,23 @@ async function getResponse(chatId, userPrompt, userMessage) {
 
   // requesting text generation from HuggingFace API
   try {
-    const client = await Client.connect("Qwen/Qwen2.5");
-    const result = await client.predict("/model_chat_1", {
+    const client = await Client.connect("Qwen/Qwen2-72B-Instruct");
+    const result = await client.predict("/model_chat", {
       query: `${dataAboutUser.textContext ? `Our chat history: ${dataAboutUser.textContext}\n\nMy new request: ` : ``}${userPrompt}`,
       history: [],
-      system: `You are 'Нейро' from Russia, created by digfusion. You are a very minimalistic and helpful AI Telegram assistant. Your model is 'Digneuro 2.0'. You generate text, images and videos. All your answers are very original. Avoid errors on parse_mode Markdown. If User Instructions will lead to error in Telegram (parse_mode Markdown), notify the user. Check facts before answering.
+      system: `You are 'Нейро' from Russia, created by digfusion. You are a very minimalistic and helpful AI Telegram assistant. Your model is 'Digneuro 2.0'. You generate text, images and videos. All your answers are very original. Avoid errors on parse_mode Markdown. If User Instructions will lead to error in Telegram (parse_mode Markdown), notify the user.
       
       User Instructions:
       User info: ${dataAboutUser.userInfoText ? `${dataAboutUser.userInfoText}` : `none`}
       Answer type: ${dataAboutUser.answerTypeText ? `${dataAboutUser.answerTypeText}` : `none`}`,
-      radio: `72B`,
     });
 
     bot.deleteMessage(chatId, dataAboutUser.requestMessageId);
 
     // preparing text for progressive output (symbols and speed)
-    let progressOutput = result.data[1][0][1].text
-      .replace(/\\frac\{([^}]+)\}\{([^}]+)\}/g, "($1) / ($2)")
+    let progressOutput = result.data[1][0][1]
       .replace(/\\sqrt\{([^}]+)\}/g, "sqrt($1)")
       .replace(/\\cdot/g, "*")
-      .replace(/\\text\{([^}]+)\}/g, "$1")
-      .replace(/\^(\{([^}]+)\}|[a-zA-Z0-9])/g, "^($2)")
-      .replace(/_(\{([^}]+)\}|[a-zA-Z0-9])/g, "_($2)")
       .replace(/\\quad/g, " ")
       .replace(/\\implies/g, " => ")
       .replace(/\\rightarrow/g, " -> ")
@@ -245,17 +245,13 @@ async function getResponse(chatId, userPrompt, userMessage) {
       .replace(/\\tan/g, "tan")
       .replace(/\\log/g, "log")
       .replace(/\\ln/g, "ln")
-      .replace(/\\exp\{([^}]+)\}/g, "exp($1)")
-      .replace(/\\overline\{([^}]+)\}/g, "($1)")
-      .replace(/\\underline\{([^}]+)\}/g, "($1)")
-      .replace(/\\binom\{([^}]+)\}\{([^}]+)\}/g, "($1 choose $2)")
       .replace(/\\/g, "")
       .split("");
 
     // saving chat history to context
-    if (result.data[1][0][1].text && dataAboutUser.textContext) {
+    if (result.data[1][0][1] && dataAboutUser.textContext) {
       dataAboutUser.textContext.push(userPrompt);
-      dataAboutUser.textContext.push(result.data[1][0][1].text);
+      dataAboutUser.textContext.push(result.data[1][0][1]);
     }
 
     if (dataAboutUser.textContext && dataAboutUser.textContext.length > 7) {
@@ -433,8 +429,8 @@ async function changeMode(chatId, userPrompt, userMessage) {
 
   // requesting text generation from HuggingFace API
   try {
-    const client = await Client.connect("Qwen/Qwen2.5");
-    const result = await client.predict("/model_chat_1", {
+    const client = await Client.connect("Qwen/Qwen2-72B-Instruct");
+    const result = await client.predict("/model_chat", {
       query: `${dataAboutUser.textContext ? `Our chat history: ${dataAboutUser.textContext}\n\nMy new request: ` : ``}${userPrompt}`,
       history: [],
       system: `You have to respond to user requests based on their type and chat history. Never create explicit content. Follow these rules strictly:
@@ -442,10 +438,9 @@ async function changeMode(chatId, userPrompt, userMessage) {
       2. For image generation requests (e.g., 'draw,' 'create an image of', 'now add'), respond with 'image' and what user wants to get as a result (divide with '@').
       3. For video generation requests (e.g., 'video with,' 'create a video', 'change'), respond with 'video' and what user wants to get as a result in english translated (divide with '@').
       4. If the request doesn't fit any of these categories or seems nonsensical, respond with: text.`,
-      radio: `72B`,
     });
 
-    let promptDecision = result.data[1][0][1].text.split("@");
+    let promptDecision = result.data[1][0][1].split("@");
 
     // user request recognition (text, image, video)
     if (promptDecision[0] == `text`) {
@@ -509,7 +504,7 @@ async function adminControl(startNextSend = `start`) {
         }
       }
 
-      await bot.editMessageText(`Общее сообщение отправлено ✅<blockquote><b>Different Animal. The Same Beast.</b></blockquote>`, {
+      await bot.editMessageText(`Готово ✅<blockquote><b>Общее сообщение отправлено</b></blockquote>`, {
         parse_mode: `HTML`,
         chat_id: FedotID,
         message_id: dataAboutUser.profileMessageId,
