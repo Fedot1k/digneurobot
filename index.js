@@ -6,7 +6,7 @@ import fs from "fs";
 import { config } from "./config.js"; // Digneurobot Token
 import { textData, buttonData, errorData, databaseBackup } from "./watcher.js"; // Surround Watcher (debugging)
 
-const bot = new TelegramBot(config.Tokens[0], { polling: true }); // bot setup
+const bot = new TelegramBot(config.Tokens[1], { polling: true }); // bot setup
 const FedotID = 870204479; // developer ID
 
 let usersData = [];
@@ -55,7 +55,7 @@ async function profile(chatId, sectionType = `profile`) {
           disable_web_page_preview: true,
           reply_markup: {
             inline_keyboard: [
-              [{ text: `${chatId == FedotID  ? `Управление 🔥` : ``}`, callback_data: `adminStart` }],
+              [{ text: `${chatId == FedotID ? `Управление 🔥` : ``}`, callback_data: `adminStart` }],
               [
                 { text: `❕О боте`, callback_data: `about` },
                 { text: `digfusion❔`, callback_data: `digfusion` },
@@ -273,21 +273,17 @@ async function getImage(chatId, userPrompt, userMessage) {
 
   // requesting image generation from HuggingFace API
   try {
-    const client = await Client.connect("Serg4451D/FLUX.1-Dev-Serverless-darn-enhanced-prompt");
+    const client = await Client.connect("Zhofang/FLUX.1-Dev-Serverless-darn");
     const result = await client.predict("/query", {
       prompt: userPrompt,
       is_negative: `(deformed, distorted, disfigured), poorly drawn, bad anatomy, wrong anatomy, extra limb, missing limb, floating limbs, (mutated hands and fingers), disconnected limbs, mutation, mutated, ugly, disgusting, blurry, amputation, misspellings, typos, unrealistic, bad looking, low quality`,
       steps: 35,
-      cfg_scale: 7,
+      cfg_scale: 0.7,
       sampler: "DPM++ 2M Karras",
       seed: -1,
       strength: 0.7,
       huggingface_api_key: "",
       use_dev: false,
-      enhance_prompt_style: "",
-      enhance_prompt_option: false,
-      nemo_enhance_prompt_style: "",
-      use_mistral_nemo: false,
     });
 
     bot.sendChatAction(chatId, "upload_photo");
@@ -547,55 +543,55 @@ async function StartAll() {
 
       const dataAboutUser = usersData?.find((obj) => obj.chatId == chatId);
 
-	  if (dataAboutUser) {
-      switch (text) {
-        case `/start`:
-          intro(chatId);
-          break;
-        case `/reset`:
-          resetTextChat(chatId);
-          break;
-        case `/profile`:
-          dataAboutUser.userAction = `regular`;
-          profile(chatId, `send`);
-          break;
-        case `/start userInfo`:
-          bot.deleteMessage(chatId, userMessage);
-          dataAboutUser.userAction = `userInfoInput`;
-          profile(chatId, `userInfo`);
-          break;
-        case `/start answerType`:
-          bot.deleteMessage(chatId, userMessage);
-          dataAboutUser.userAction = `answerTypeInput`;
-          profile(chatId, `answerType`);
-          break;
-      }
-
-      // answering to request and saving user instructions
-      if (text && Array.from(text)[0] != "/") {
-        switch (dataAboutUser.userAction) {
-          case `regular`:
-            processingRequest(chatId);
-            changeMode(chatId, text, userMessage);
+      if (dataAboutUser) {
+        switch (text) {
+          case `/start`:
+            intro(chatId);
             break;
-          case `userInfoInput`:
+          case `/reset`:
+            resetTextChat(chatId);
+            break;
+          case `/profile`:
+            dataAboutUser.userAction = `regular`;
+            profile(chatId, `send`);
+            break;
+          case `/start userInfo`:
             bot.deleteMessage(chatId, userMessage);
-            dataAboutUser.userInfoText = `${text.length <= 750 ? text : text.slice(0, 750)}`;
+            dataAboutUser.userAction = `userInfoInput`;
             profile(chatId, `userInfo`);
             break;
-          case `answerTypeInput`:
+          case `/start answerType`:
             bot.deleteMessage(chatId, userMessage);
-            dataAboutUser.answerTypeText = `${text.length <= 750 ? text : text.slice(0, 750)}`;
+            dataAboutUser.userAction = `answerTypeInput`;
             profile(chatId, `answerType`);
             break;
-          case `adminInput`:
-            bot.deleteMessage(chatId, userMessage);
-            dataAboutUser.userAction = message.text;
-            adminControl(`next`);
-            break;
+        }
+
+        // answering to request and saving user instructions
+        if (text && Array.from(text)[0] != "/") {
+          switch (dataAboutUser.userAction) {
+            case `regular`:
+              processingRequest(chatId);
+              changeMode(chatId, text, userMessage);
+              break;
+            case `userInfoInput`:
+              bot.deleteMessage(chatId, userMessage);
+              dataAboutUser.userInfoText = `${text.length <= 750 ? text : text.slice(0, 750)}`;
+              profile(chatId, `userInfo`);
+              break;
+            case `answerTypeInput`:
+              bot.deleteMessage(chatId, userMessage);
+              dataAboutUser.answerTypeText = `${text.length <= 750 ? text : text.slice(0, 750)}`;
+              profile(chatId, `answerType`);
+              break;
+            case `adminInput`:
+              bot.deleteMessage(chatId, userMessage);
+              dataAboutUser.userAction = message.text;
+              adminControl(`next`);
+              break;
+          }
         }
       }
- }
       // Surround Watcher (text)
       textData(chatId, dataAboutUser.login, text);
     } catch (error) {
@@ -610,45 +606,45 @@ async function StartAll() {
 
     const dataAboutUser = usersData?.find((obj) => obj.chatId == chatId);
 
-if (dataAboutUser) {
-    try {      
-		switch (data) {
-			case `profile`:
-			  dataAboutUser.userAction = `regular`;
-			  profile(chatId);
-			  break;
-			case `digfusion`:
-			  digfusion(chatId);
-			  break;
-			case `about`:
-			  about(chatId);
-			  break;
-			case `adminStart`:
-			  dataAboutUser.userAction = `adminInput`;
-			  adminControl(`start`);
-			  break;
-			case `adminBack`:
-			  adminControl(`start`);
-			  break;
-			case `adminSend`:
-			  adminControl(`send`);
-			  break;
-			case `userInfoDelete`:
-			  dataAboutUser.userInfoText = ``;
-			  profile(chatId, `userInfo`);
-			  break;
-			case `answerTypeDelete`:
-			  dataAboutUser.answerTypeText = ``;
-			  profile(chatId, `answerType`);
-			  break;
-		  }
-	 
-      // Surround Watcher (button)
-      buttonData(chatId, dataAboutUser.login, data);
-    } catch (error) {
-      errorData(chatId, dataAboutUser.login, `${String(error)}`);
+    if (dataAboutUser) {
+      try {
+        switch (data) {
+          case `profile`:
+            dataAboutUser.userAction = `regular`;
+            profile(chatId);
+            break;
+          case `digfusion`:
+            digfusion(chatId);
+            break;
+          case `about`:
+            about(chatId);
+            break;
+          case `adminStart`:
+            dataAboutUser.userAction = `adminInput`;
+            adminControl(`start`);
+            break;
+          case `adminBack`:
+            adminControl(`start`);
+            break;
+          case `adminSend`:
+            adminControl(`send`);
+            break;
+          case `userInfoDelete`:
+            dataAboutUser.userInfoText = ``;
+            profile(chatId, `userInfo`);
+            break;
+          case `answerTypeDelete`:
+            dataAboutUser.answerTypeText = ``;
+            profile(chatId, `answerType`);
+            break;
+        }
+
+        // Surround Watcher (button)
+        buttonData(chatId, dataAboutUser.login, data);
+      } catch (error) {
+        errorData(chatId, dataAboutUser.login, `${String(error)}`);
+      }
     }
- }
   });
 
   // photo recognition
