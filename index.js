@@ -275,7 +275,7 @@ async function getImage(chatId, userPrompt, userMessage) {
   try {
     const client = await Client.connect("Zhofang/FLUX.1-Dev-Serverless-darn");
     const result = await client.predict("/query", {
-      prompt: userPrompt,
+      prompt: `${userPrompt ? userPrompt : 'White sand beach with palm trees and hot sun'}`,
       is_negative: `(deformed, distorted, disfigured), poorly drawn, bad anatomy, wrong anatomy, extra limb, missing limb, floating limbs, (mutated hands and fingers), disconnected limbs, mutation, mutated, ugly, disgusting, blurry, amputation, misspellings, typos, unrealistic, bad looking, low quality`,
       steps: 35,
       cfg_scale: 0.7,
@@ -318,7 +318,7 @@ async function getVideo(chatId, userPrompt, userMessage) {
   try {
     const client = await Client.connect("TIGER-Lab/T2V-Turbo-V2");
     const result = await client.predict("/predict", {
-      prompt: userPrompt,
+      prompt: `${userPrompt ? userPrompt : 'White sand beach with palm trees and hot sun'}`,
       guidance_scale: 7.5,
       percentage: 0.5,
       num_inference_steps: 16,
@@ -431,9 +431,10 @@ async function changeMode(chatId, userPrompt, userMessage) {
       history: [],
       system: `You have to respond to user requests based on their type and chat history. Never create explicit content. Follow these rules strictly:
       1. For standard information requests or tasks (e.g., 'solve,' 'who is'), respond with only one word and nothing else: 'text'.
-      2. For image generation requests (e.g., 'draw,' 'create an image of', 'now add'), respond with 'image' and what user wants to get as a result (divide with '@').
-      3. For video generation requests (e.g., 'video with,' 'create a video', 'change'), respond with 'video' and what user wants to get as a result in english translated (divide with '@').
-      4. If the request doesn't fit any of these categories or seems nonsensical, respond with: text.`,
+      2. For image generation requests (e.g., 'draw,' 'create an image of', 'now add'), respond with 'image' and what user wants to get as a result with enhanced prompt (divide with '@').
+      3. For video generation requests (e.g., 'video with,' 'create a video', 'change'), respond with 'video' and what user wants to get as a result with enhanced prompt in english translated (divide with '@').
+      4. If the prompt is empty (e.g., 'image' 'video'), respond accordingly with 'image' or 'video' and random cool prompt from you (divide with '@').
+      5. If the request doesn't fit any of these categories or seems nonsensical, respond with: text.`,
     });
 
     let promptDecision = result.data[1][0][1].split("@");
