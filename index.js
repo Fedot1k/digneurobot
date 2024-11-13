@@ -273,6 +273,7 @@ async function getImage(chatId, userPrompt, userMessage) {
 
   // requesting image generation from HuggingFace API
   try {
+    /*
     const client = await Client.connect("Zhofang/FLUX.1-Dev-Serverless-darn");
     const result = await client.predict("/query", {
       prompt: `${userPrompt ? userPrompt : 'White sand beach with palm trees and hot sun'}`,
@@ -284,6 +285,17 @@ async function getImage(chatId, userPrompt, userMessage) {
       strength: 0.7,
       huggingface_api_key: "",
       use_dev: false,
+    }); */
+
+    const client = await Client.connect("doevent/FLUX.1-merged");
+    const result = await client.predict("/infer", {
+      prompt: `${userPrompt ? userPrompt : 'White sand beach with palm trees and hot sun'}`,
+      seed: 0,
+      randomize_seed: true,
+      width: 1024,
+      height: 1024,
+      guidance_scale: 8,
+      num_inference_steps: 8,
     });
 
     bot.sendChatAction(chatId, "upload_photo");
@@ -318,7 +330,7 @@ async function getVideo(chatId, userPrompt, userMessage) {
   try {
     const client = await Client.connect("TIGER-Lab/T2V-Turbo-V2");
     const result = await client.predict("/predict", {
-      prompt: `${userPrompt ? userPrompt : 'White sand beach with palm trees and hot sun'}`,
+      prompt: `${userPrompt ? userPrompt : "White sand beach with palm trees and hot sun"}`,
       guidance_scale: 7.5,
       percentage: 0.5,
       num_inference_steps: 16,
