@@ -289,7 +289,7 @@ async function getImage(chatId, userPrompt, userMessage) {
 
     const client = await Client.connect("doevent/FLUX.1-merged");
     const result = await client.predict("/infer", {
-      prompt: `${userPrompt ? userPrompt : 'White sand beach with palm trees and hot sun'}`,
+      prompt: `${userPrompt ? userPrompt : "White sand beach with palm trees and hot sun"}`,
       seed: 0,
       randomize_seed: true,
       width: 1024,
