@@ -6,7 +6,7 @@ import fs from "fs";
 import { config } from "./config.js"; // Digneurobot Token
 import { textData, buttonData, errorData, databaseBackup } from "./watcher.js"; // Surround Watcher (debugging)
 
-const bot = new TelegramBot(config.Tokens[0], { polling: true }); // bot setup
+const bot = new TelegramBot(config.Tokens[1], { polling: true }); // bot setup
 const FedotID = 870204479; // developer ID
 
 let usersData = [];
@@ -210,7 +210,7 @@ async function getResponse(chatId, userPrompt, userMessage) {
 
   // requesting text generation from HuggingFace API
   try {
-    const client = await Client.connect("Qwen/Qwen2-72B-Instruct");
+    const client = await Client.connect("Qwen/Qwen2.5-72B-Instruct");
     const result = await client.predict("/model_chat", {
       query: `${dataAboutUser.textContext ? `Our chat history: ${dataAboutUser.textContext}\n\nMy new request: ` : ``}${userPrompt}`,
       history: [],
@@ -437,7 +437,7 @@ async function changeMode(chatId, userPrompt, userMessage) {
 
   // requesting text generation from HuggingFace API
   try {
-    const client = await Client.connect("Qwen/Qwen2-72B-Instruct");
+    const client = await Client.connect("Qwen/Qwen2.5-72B-Instruct");
     const result = await client.predict("/model_chat", {
       query: `${dataAboutUser.textContext ? `Our chat history: ${dataAboutUser.textContext}\n\nMy new request: ` : ``}${userPrompt}`,
       history: [],
@@ -660,24 +660,8 @@ async function StartAll() {
     }
   });
 
-  // photo recognition
-  bot.on(`photo`, async (photo) => {
-    let chatId = photo.chat.id;
-    let photoId = photo.photo[2].file_id;
-    let photoCaption = photo.caption;
-
-    const dataAboutUser = usersData.find((obj) => obj.chatId == chatId);
-
-    try {
-      // Surround Watcher (photo)
-      textData(chatId, dataAboutUser.login, photoCaption);
-    } catch (error) {
-      errorData(chatId, dataAboutUser.login, `${String(error)}`);
-    }
-  });
-
   // backup DB.json
-  cron.schedule(`0 */12 * * *`, function () {
+  cron.schedule(`0 0 * * 1`, function () {
     try {
       // Surround Watcher (backup)
       databaseBackup(usersData);
@@ -685,7 +669,7 @@ async function StartAll() {
   });
 
   // saving DB.json
-  cron.schedule(`*/30 * * * *`, function () {
+  cron.schedule(`0 0 * * *`, function () {
     try {
       fs.writeFileSync("DB.json", JSON.stringify({ usersData }, null, 2));
     } catch (error) {}
