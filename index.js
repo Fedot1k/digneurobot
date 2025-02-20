@@ -6,7 +6,7 @@ import fs from "fs";
 import { config } from "./config.js"; // Digneurobot Token
 import { textData, buttonData, errorData, databaseBackup } from "./watcher.js"; // Surround Watcher (debugging)
 
-const bot = new TelegramBot(config.Tokens[1], { polling: true }); // bot setup
+const bot = new TelegramBot(config.Tokens[0], { polling: true }); // bot setup
 const FedotID = 870204479; // developer ID
 
 let usersData = [];
@@ -370,7 +370,7 @@ async function processingRequest(chatId) {
 
   try {
     await bot
-      .sendMessage(chatId, `Ваш запрос обрабатывается...`, {
+      .sendMessage(chatId, `<b>Думаю над ответом 💭</b>`, {
         parse_mode: `HTML`,
         disable_web_page_preview: true,
       })
@@ -660,13 +660,17 @@ async function StartAll() {
     }
   });
 
+  /* 
+  
   // backup DB.json
   cron.schedule(`0 0 * * 1`, function () {
     try {
       // Surround Watcher (backup)
       databaseBackup(usersData);
     } catch (error) {}
-  });
+  }); 
+  
+  */
 
   // saving DB.json
   cron.schedule(`0 0 * * *`, function () {
