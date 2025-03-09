@@ -1,21 +1,21 @@
-# [digneurobot](https://t.me/digneurobot) | About
+# [digneurobot](https://t.me/digneurobot) | about
 
-**AI** telegram bot by _**digfusion**_. 
+**AI** telegram bot by _**digfusion**_
 
-• **Unlimited requests**
+• **unlimited requests**
 
-• **Light speed responses**
+• **light speed responses**
 
-• **Absolutely free**
+• **absolutely free**
 
-## Models used
+## models used
 
-• **QWEN 2.5** - Text Chat
+• **ChatGPT** - text chat
 
-• **FLUX.1** - Image Generating
+• **FLUX** - image generating
 
-• **Turbo 2** - Video Generating
+• **Turbo 2** - video generating
 
 [digfusion](https://t.me/digfusionbot) • [digsupport](https://t.me/digsupport)
 
-> _digfusion 2024_
+> _digfusion 2025_
