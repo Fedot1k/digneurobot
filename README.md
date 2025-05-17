@@ -6,8 +6,6 @@
 
 • **light speed responses**
 
-• **absolutely free**
-
 ## models used
 
 • **ChatGPT** - text chat
