@@ -6,7 +6,9 @@ import fs from "fs";
 import { config } from "./config.js";
 import { textData, buttonData, errorData, databaseBackup } from "./watcher.js";
 
-const bot = new TelegramBot(config.TOKEN.Trial, { polling: true });
+const bot = new TelegramBot(config.TOKEN.Neuro, { polling: true });
+
+const botName = [`trialdynamicsbot`, `digneurobot`][1];
 
 const developerId = { Fedot: 870204479 };
 
@@ -23,25 +25,22 @@ async function intro(chatId) {
   try {
     await bot.sendMessage(
       chatId,
-      `Добрo пожаловать в <b>Нейросетивичок</b>. Чтобы задать вопрос, напишите его в чате.\n\n<b>Команды:</b>\n<blockquote>/start - Новый чат\n/profile - Профиль</blockquote>`,
+      `Привет, это <b>Нейросетивичок</b>\nЧтобы задать вопрос, напиши его в чате\n\n<b>Команды:</b>\n<blockquote>/start - Новый чат\n/profile - Профиль</blockquote>`,
       {
         parse_mode: `HTML`,
         disable_web_page_preview: true,
       }
     );
-
-    dataAboutUser.textContext = [];
-    dataAboutUser.userAction = "regular";
   } catch (error) {
     errorData(chatId, dataAboutUser.login, `${String(error)}`);
   }
 }
 
-async function profile(chatId, sectionType = `profile`) {
+async function profile(chatId, type = `profile`) {
   const dataAboutUser = usersData.find((obj) => obj.chatId == chatId);
 
   try {
-    switch (sectionType) {
+    switch (type) {
       case `send`:
         await bot.sendMessage(chatId, "ㅤ").then((message) => {
           dataAboutUser.profileMessageId = message.message_id;
@@ -56,14 +55,14 @@ async function profile(chatId, sectionType = `profile`) {
             dataAboutUser.userInfoText
               ? `${dataAboutUser.userInfoText.slice(0, 200)}${
                   dataAboutUser.userInfoText.length > 200 ? `..` : ``
-                }\n\n<a href="https://t.me/digneurobot/?start=userInfo"><b>Изменить..</b></a>`
-              : `<a href="https://t.me/digneurobot/?start=userInfo"><b>Добавить..</b></a>`
+                }\n\n<a href="https://t.me/${botName}/?start=userInfo"><b>Изменить..</b></a>`
+              : `<a href="https://t.me/${botName}/?start=userInfo"><b>Добавить..</b></a>`
           }</blockquote>\n\n<b>Какой ответ вы хотели бы получить:</b><blockquote>${
             dataAboutUser.answerTypeText
               ? `${dataAboutUser.answerTypeText.slice(0, 200)}${
                   dataAboutUser.answerTypeText.length > 200 ? `..` : ``
-                }\n\n<a href="https://t.me/digneurobot/?start=answerType"><b>Изменить..</b></a>`
-              : `<a href="https://t.me/digneurobot/?start=answerType"><b>Добавить..</b></a>`
+                }\n\n<a href="https://t.me/${botName}/?start=answerType"><b>Изменить..</b></a>`
+              : `<a href="https://t.me/${botName}/?start=answerType"><b>Добавить..</b></a>`
           }</blockquote>`,
           {
             parse_mode: `HTML`,
@@ -153,7 +152,7 @@ async function profile(chatId, sectionType = `profile`) {
         break;
       case `about`:
         await bot.editMessageText(
-          `<b>Что такое Нейросетивичок?</b><blockquote><b>Бот</b>, разработанный компанией <b>digfusion</b> с использованием <b>Hugging Face API.</b></blockquote>\n\n<b>Главные преимущества:</b><blockquote><b>• Быстрые ответы</b>\nМощный искусственный интеллект способен отвечать на вопросы с <b>невероятной скоростью.</b>\n\n<b>• Неограниченные запросы</b>\nОтсутствие лимитов на все функции открывает доступ к <b>безграничному пользованию.</b>\n\n<b>• Абсолютно бесплатно</b>\nВзаимодействие с ботом <b>не требует подписки</b> и других платных услуг.</blockquote>\n\nЧто такое <b>Контекст?</b><blockquote><b>Бот</b> умеет запоминать <b>историю сообщений</b> при <b>текстовых запросах.</b> Это помогает вести и дополнять диалог в рамках <b>одной темы.</b></blockquote>`,
+          `<b><i>❕Нейро • О боте</i></b>\n\n<b>Кто такой Нейросетивичок?</b><blockquote><b>Бот</b>, разработанный компанией <b><i>digfusion</i></b> с использованием <b>ChatGPT API</b></blockquote>\n\n<b>Главные преимущества:</b><blockquote><b>• Быстрые ответы</b>\nМощная нейросеть отвечает на вопросы с <b>невероятной скоростью</b>\n\n<b>• Неограниченные запросы</b>\nОтсутствие лимитов открывает доступ к <b>бесконечному пользованию</b></blockquote>`,
           {
             parse_mode: `HTML`,
             chat_id: chatId,
@@ -169,7 +168,7 @@ async function profile(chatId, sectionType = `profile`) {
         break;
       case `digfusion`:
         await bot.editMessageText(
-          `<b><i>❔digfusion • О нас</i></b>\n<blockquote>Компания <b><i>digfusion</i></b> - <b>начинающий стартап,</b> разрабатывающий <b>свои приложения</b> и предоставляющий услуги по <b>созданию чат-ботов</b> различных типов!\n\nПросмотреть все <b>наши проекты, реальные отзывы, каталог услуг</b> и <b>прочую информацию о компании</b> можно в нашем <b>Telegram канале</b> и <b>боте-консультанте!</b>\n\n<i>Это приложение разработано <b>digfusion</b> с душой 🤍</i></blockquote>\n\n<b><a href="https://t.me/digfusion">digfusion | инфо</a> • <a href="https://t.me/digfusionbot">digfusion | услуги</a></b>`,
+          `<b><i>❔digfusion • О нас</i></b>\n\n<blockquote>Компания <b><i>digfusion</i></b> - <b>начинающий стартап,</b> разрабатывающий <b>свои приложения</b> и предоставляющий услуги по <b>созданию чат-ботов</b> различных типов!\n\nБыстро, надежно и с умом. Нам доверяют <b>известные личности,</b> и мы делаем продукт, который <b>цепляет и приносит результат</b>\n\n<i>Это приложение разработано <b>digfusion</b> с душой 🤍</i></blockquote>\n\n<b><a href="https://digfusion.ru/">Сайт</a> • <a href="https://t.me/digfusion">Новости</a> • <a href="https://t.me/digfeedbacks">Отзывы</a></b>`,
           {
             parse_mode: "HTML",
             chat_id: chatId,
@@ -273,7 +272,6 @@ async function getResponse(chatId, userPrompt, userMessage) {
 
     bot.deleteMessage(chatId, dataAboutUser.requestMessageId);
 
-    // preparing text for progressive output (symbols and speed)
     let progressOutput = result.data[1][0][1]
       .replace(/\\sqrt\{([^}]+)\}/g, "sqrt($1)")
       .replace(/\\cdot/g, "*")
@@ -309,7 +307,6 @@ async function getResponse(chatId, userPrompt, userMessage) {
       dataAboutUser.textContext.shift();
     }
 
-    // progressively printing out text response
     showResponseText(chatId, progressOutput, userMessage);
   } catch (error) {
     serverOverload(chatId);
@@ -405,23 +402,6 @@ async function getVideo(chatId, userPrompt, userMessage) {
   }
 }
 
-async function processingRequest(chatId) {
-  const dataAboutUser = usersData.find((obj) => obj.chatId == chatId);
-
-  try {
-    await bot
-      .sendMessage(chatId, `<b>Думаю над ответом 💭</b>`, {
-        parse_mode: `HTML`,
-        disable_web_page_preview: true,
-      })
-      .then((message) => {
-        dataAboutUser.requestMessageId = message.message_id;
-      });
-  } catch (error) {
-    errorData(chatId, dataAboutUser.login, `${String(error)}`);
-  }
-}
-
 async function serverOverload(chatId) {
   const dataAboutUser = usersData.find((obj) => obj.chatId == chatId);
 
@@ -444,8 +424,16 @@ async function serverOverload(chatId) {
 async function changeMode(chatId, userPrompt, userMessage) {
   const dataAboutUser = usersData.find((obj) => obj.chatId == chatId);
 
-  // requesting text generation from HuggingFace API
   try {
+    bot
+      .sendMessage(chatId, `<b>Думаю над ответом 💭</b>`, {
+        parse_mode: `HTML`,
+        disable_web_page_preview: true,
+      })
+      .then((message) => {
+        dataAboutUser.requestMessageId = message.message_id;
+      });
+
     const client = await Client.connect("Qwen/Qwen2.5-72B-Instruct");
     const result = await client.predict("/model_chat", {
       query: `${
@@ -464,16 +452,19 @@ async function changeMode(chatId, userPrompt, userMessage) {
 
     let promptDecision = result.data[1][0][1].split("@");
 
-    // user request recognition (text, image, video)
-    if (promptDecision[0] == `text`) {
-      bot.sendChatAction(chatId, "typing");
-      getResponse(chatId, userPrompt, userMessage);
-    } else if (promptDecision[0] == `image`) {
-      bot.sendChatAction(chatId, "upload_photo");
-      getImage(chatId, promptDecision[1], userMessage);
-    } else if (promptDecision[0] == `video`) {
-      bot.sendChatAction(chatId, "record_video");
-      getVideo(chatId, promptDecision[1], userMessage);
+    switch (promptDecision[0]) {
+      case `text`:
+        bot.sendChatAction(chatId, "typing");
+        getResponse(chatId, userPrompt, userMessage);
+        break;
+      case `image`:
+        bot.sendChatAction(chatId, "upload_photo");
+        getImage(chatId, promptDecision[1], userMessage);
+        break;
+      case `video`:
+        bot.sendChatAction(chatId, "record_video");
+        getVideo(chatId, promptDecision[1], userMessage);
+        break;
     }
   } catch (error) {
     serverOverload(chatId);
@@ -481,10 +472,10 @@ async function changeMode(chatId, userPrompt, userMessage) {
   }
 }
 
-async function adminControl(chatId, startNextSend = `start`) {
+async function adminControl(chatId, type = `start`) {
   const dataAboutUser = usersData.find((obj) => obj.chatId == chatId);
 
-  switch (startNextSend) {
+  switch (type) {
     case `start`:
       await bot.editMessageText(`Введите текст общего сообщения..`, {
         parse_mode: `HTML`,
@@ -594,6 +585,8 @@ async function StartAll() {
         switch (text) {
           case `/start`:
             intro(chatId);
+            dataAboutUser.textContext = [];
+            dataAboutUser.userAction = "regular";
             break;
           case `/profile`:
             dataAboutUser.userAction = `regular`;
@@ -614,7 +607,6 @@ async function StartAll() {
         if (text && Array.from(text)[0] != "/") {
           switch (dataAboutUser.userAction) {
             case `regular`:
-              processingRequest(chatId);
               changeMode(chatId, text, userMessage);
               break;
             case `userInfoInput`:
