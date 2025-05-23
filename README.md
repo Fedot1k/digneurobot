@@ -10,9 +10,9 @@
 
 • **ChatGPT** - text chat
 
-• **FLUX** - image generating
+• **FLUX** - image generation
 
-• **Turbo 2** - video generating
+• **Turbo 2** - video generation
 
 [digfusion](https://t.me/digfusion) • [digsupport](https://t.me/digsupport)
 

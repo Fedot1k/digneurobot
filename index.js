@@ -6,9 +6,9 @@ import fs from "fs";
 import { config } from "./config.js";
 import { textData, buttonData, errorData, databaseBackup } from "./watcher.js";
 
-const bot = new TelegramBot(config.TOKEN.Neuro, { polling: true });
+const bot = new TelegramBot(config.TOKEN.Trial, { polling: true });
 
-const botName = [`trialdynamicsbot`, `digneurobot`][1];
+const botName = { Trial: `trialdynamicsbot`, Neuro: `digneurobot` }.Trial;
 
 const developerId = { Fedot: 870204479 };
 
@@ -87,7 +87,7 @@ async function profile(chatId, type = `profile`) {
                 ],
                 [
                   {
-                    text: `Поддержка 💭`,
+                    text: `Связь 💭`,
                     url: `https://t.me/digsupport`,
                   },
                 ],
@@ -188,6 +188,88 @@ async function profile(chatId, type = `profile`) {
   }
 }
 
+async function admin(chatId, type = `start`) {
+  const dataAboutUser = usersData.find((obj) => obj.chatId == chatId);
+
+  switch (type) {
+    case `start`:
+      await bot.editMessageText(`Введи текст общего сообщения..`, {
+        parse_mode: `HTML`,
+        chat_id: chatId,
+        message_id: dataAboutUser.profileMessageId,
+        disable_web_page_preview: true,
+        reply_markup: {
+          inline_keyboard: [[{ text: `⬅️Назад`, callback_data: `profile` }]],
+        },
+      });
+      break;
+    case `next`:
+      await bot.editMessageText(dataAboutUser.userAction, {
+        parse_mode: `HTML`,
+        chat_id: chatId,
+        message_id: dataAboutUser.profileMessageId,
+        disable_web_page_preview: true,
+        reply_markup: {
+          inline_keyboard: [
+            [
+              { text: `⬅️Назад`, callback_data: `adminStart` },
+              { text: `Отправить ✅`, callback_data: `adminSend` },
+            ],
+          ],
+        },
+      });
+      break;
+    case `send`:
+      for (let i = 0; i < usersData.length; i++) {
+        try {
+          await bot.sendMessage(usersData[i].chatId, dataAboutUser.userAction, {
+            parse_mode: "HTML",
+            disable_web_page_preview: true,
+          });
+        } catch (error) {
+          errorData(
+            usersData[i].chatId,
+            usersData[i].login,
+            `${String(error)}`
+          );
+          continue;
+        }
+      }
+
+      await bot.editMessageText(
+        `Готово ✅<blockquote><b>Общее сообщение отправлено</b></blockquote>`,
+        {
+          parse_mode: `HTML`,
+          chat_id: chatId,
+          message_id: dataAboutUser.profileMessageId,
+          disable_web_page_preview: true,
+        }
+      );
+
+      dataAboutUser.userAction = `regular`;
+      break;
+  }
+}
+
+async function serverOverload(chatId) {
+  const dataAboutUser = usersData.find((obj) => obj.chatId == chatId);
+
+  bot.deleteMessage(chatId, dataAboutUser.requestMessageId);
+
+  try {
+    await bot.sendMessage(
+      chatId,
+      `Извини, сервер перегружен 😕<blockquote><b>Пожалуйста, попробуй позже</b></blockquote>`,
+      {
+        parse_mode: `HTML`,
+        disable_web_page_preview: true,
+      }
+    );
+  } catch (error) {
+    errorData(chatId, dataAboutUser.login, `${String(error)}`);
+  }
+}
+
 async function showResponseText(chatId, progressOutput, userMessage) {
   const dataAboutUser = usersData.find((obj) => obj.chatId == chatId);
 
@@ -241,7 +323,7 @@ async function showResponseText(chatId, progressOutput, userMessage) {
 
     bot.sendChatAction(chatId, "cancel");
   } catch (error) {
-    errorData(chatId, dataAboutUser.login, `${String(error)}`, `response`);
+    errorData(chatId, dataAboutUser.login, `${String(error)}`);
   }
 }
 
@@ -261,12 +343,12 @@ async function getResponse(chatId, userPrompt, userMessage) {
       
       User Instructions:
       User info: ${
-        dataAboutUser.userInfoText ? `${dataAboutUser.userInfoText}` : `none`
+        dataAboutUser.userInfoText ? `${dataAboutUser.userInfoText}` : `None`
       }
       Answer type: ${
         dataAboutUser.answerTypeText
           ? `${dataAboutUser.answerTypeText}`
-          : `none`
+          : `None`
       }`,
     });
 
@@ -310,7 +392,7 @@ async function getResponse(chatId, userPrompt, userMessage) {
     showResponseText(chatId, progressOutput, userMessage);
   } catch (error) {
     serverOverload(chatId);
-    errorData(chatId, dataAboutUser.login, `${String(error)}`, `response`);
+    errorData(chatId, dataAboutUser.login, `${String(error)}`);
   }
 }
 
@@ -353,7 +435,7 @@ async function getImage(chatId, userPrompt, userMessage) {
     }
   } catch (error) {
     serverOverload(chatId);
-    errorData(chatId, dataAboutUser.login, `${String(error)}`, `image`);
+    errorData(chatId, dataAboutUser.login, `${String(error)}`);
   }
 }
 
@@ -398,25 +480,6 @@ async function getVideo(chatId, userPrompt, userMessage) {
     }
   } catch (error) {
     serverOverload(chatId);
-    errorData(chatId, dataAboutUser.login, `${String(error)}`, `video`);
-  }
-}
-
-async function serverOverload(chatId) {
-  const dataAboutUser = usersData.find((obj) => obj.chatId == chatId);
-
-  bot.deleteMessage(chatId, dataAboutUser.requestMessageId);
-
-  try {
-    await bot.sendMessage(
-      chatId,
-      `Сервер перегружен ❌<blockquote><b>Попробуйте позже.</b></blockquote>`,
-      {
-        parse_mode: `HTML`,
-        disable_web_page_preview: true,
-      }
-    );
-  } catch (error) {
     errorData(chatId, dataAboutUser.login, `${String(error)}`);
   }
 }
@@ -468,69 +531,7 @@ async function changeMode(chatId, userPrompt, userMessage) {
     }
   } catch (error) {
     serverOverload(chatId);
-    errorData(chatId, dataAboutUser.login, `${String(error)}`, `response`);
-  }
-}
-
-async function adminControl(chatId, type = `start`) {
-  const dataAboutUser = usersData.find((obj) => obj.chatId == chatId);
-
-  switch (type) {
-    case `start`:
-      await bot.editMessageText(`Введите текст общего сообщения..`, {
-        parse_mode: `HTML`,
-        chat_id: chatId,
-        message_id: dataAboutUser.profileMessageId,
-        disable_web_page_preview: true,
-        reply_markup: {
-          inline_keyboard: [[{ text: `⬅️Назад`, callback_data: `profile` }]],
-        },
-      });
-      break;
-    case `next`:
-      await bot.editMessageText(dataAboutUser.userAction, {
-        parse_mode: `HTML`,
-        chat_id: chatId,
-        message_id: dataAboutUser.profileMessageId,
-        disable_web_page_preview: true,
-        reply_markup: {
-          inline_keyboard: [
-            [
-              { text: `⬅️Назад`, callback_data: `adminStart` },
-              { text: `Отправить ✅`, callback_data: `adminSend` },
-            ],
-          ],
-        },
-      });
-      break;
-    case `send`:
-      for (let i = 0; i < usersData.length; i++) {
-        try {
-          await bot.sendMessage(usersData[i].chatId, dataAboutUser.userAction, {
-            parse_mode: "HTML",
-            disable_web_page_preview: true,
-          });
-        } catch (error) {
-          errorData(
-            usersData[i].chatId,
-            usersData[i].login,
-            `${String(error)}`
-          );
-          continue;
-        }
-      }
-
-      await bot.editMessageText(
-        `Готово ✅<blockquote><b>Общее сообщение отправлено</b></blockquote>`,
-        {
-          parse_mode: `HTML`,
-          chat_id: chatId,
-          message_id: dataAboutUser.profileMessageId,
-          disable_web_page_preview: true,
-        }
-      );
-      dataAboutUser.userAction = `regular`;
-      break;
+    errorData(chatId, dataAboutUser.login, `${String(error)}`);
   }
 }
 
@@ -542,13 +543,13 @@ async function StartAll() {
 
   bot.on(`text`, async (message) => {
     let chatId = message.chat.id;
+    let userMessage = message.message_id;
     let text = message.text
       .replace(/&/g, "&amp;")
       .replace(/</g, "&lt;")
       .replace(/>/g, "&gt;")
       .replace(/"/g, "&quot;")
       .replace(/'/g, "&#39;");
-    let userMessage = message.message_id;
 
     try {
       const userInfo = usersData?.find((obj) => obj.chatId == chatId);
@@ -626,13 +627,13 @@ async function StartAll() {
             case `adminInput`:
               bot.deleteMessage(chatId, userMessage);
               dataAboutUser.userAction = message.text;
-              adminControl(chatId, `next`);
+              admin(chatId, `next`);
               break;
           }
         }
       }
 
-      textData(chatId, dataAboutUser.login, text);
+      textData(chatId, message.from.username, dataAboutUser.login, text);
     } catch (error) {
       errorData(chatId, message.from.first_name, `${String(error)}`);
     }
@@ -651,21 +652,21 @@ async function StartAll() {
             dataAboutUser.userAction = `regular`;
             profile(chatId);
             break;
-          case `digfusion`:
-            profile(chatId, `digfusion`);
-            break;
           case `about`:
             profile(chatId, `about`);
             break;
+          case `digfusion`:
+            profile(chatId, `digfusion`);
+            break;
           case `adminStart`:
             dataAboutUser.userAction = `adminInput`;
-            adminControl(chatId, `start`);
+            admin(chatId);
             break;
           case `adminBack`:
-            adminControl(chatId, `start`);
+            admin(chatId);
             break;
           case `adminSend`:
-            adminControl(chatId, `send`);
+            admin(chatId, `send`);
             break;
           case `userInfoDelete`:
             dataAboutUser.userInfoText = ``;
@@ -677,7 +678,12 @@ async function StartAll() {
             break;
         }
 
-        buttonData(chatId, dataAboutUser.login, data);
+        buttonData(
+          chatId,
+          query.message.chat.username,
+          dataAboutUser.login,
+          data
+        );
       } catch (error) {
         errorData(chatId, dataAboutUser.login, `${String(error)}`);
       }
