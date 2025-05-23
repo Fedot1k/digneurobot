@@ -16,6 +16,6 @@
   "license": "ISC",
   "description": "",
   "devDependencies": {
-    "@gradio/client": "^1.14.2"
+    "@gradio/client": "^1.15.0"
   }
 }

@@ -1,9 +1,9 @@
-import TelegramBot from "node-telegram-bot-api"; // Telegram, File Managing
+import TelegramBot from "node-telegram-bot-api";
 import fs from "fs";
 
-import { config } from "./config.js"; // Surround Watcher Token
+import { config } from "./config.js";
 
-const watcher = new TelegramBot(config.Tokens[2], { polling: false });
+const watcher = new TelegramBot(config.TOKEN.Watcher, { polling: false });
 const FedotID = 870204479;
 
 // debugging (text sent by user)
