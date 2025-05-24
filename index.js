@@ -1,5 +1,4 @@
 import TelegramBot from "node-telegram-bot-api";
-import OpenAI from "openai";
 import cron from "node-cron";
 import { Client } from "@gradio/client";
 import fs from "fs";
@@ -14,11 +13,6 @@ const botName = { Trial: `trialdynamicsbot`, Neuro: `digneurobot` }.Trial;
 const developerId = { Fedot: 870204479 };
 
 let usersData = [];
-
-const openai = new OpenAI({
-  apiKey: config.KEY.API,
-  baseURL: "https://openrouter.ai/api/v1",
-});
 
 bot.setMyCommands([
   { command: "/start", description: "Новый чат" },
