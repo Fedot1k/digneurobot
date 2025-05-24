@@ -1,4 +1,5 @@
 import TelegramBot from "node-telegram-bot-api";
+import OpenAI from "openai";
 import cron from "node-cron";
 import { Client } from "@gradio/client";
 import fs from "fs";
@@ -13,6 +14,11 @@ const botName = { Trial: `trialdynamicsbot`, Neuro: `digneurobot` }.Trial;
 const developerId = { Fedot: 870204479 };
 
 let usersData = [];
+
+const openai = new OpenAI({
+  apiKey: config.KEY.API,
+  baseURL: "https://openrouter.ai/api/v1",
+});
 
 bot.setMyCommands([
   { command: "/start", description: "Новый чат" },
@@ -49,9 +55,7 @@ async function profile(chatId, type = `profile`) {
         break;
       case `profile`:
         await bot.editMessageText(
-          `👤 <b><i>Профиль</i> • </b><code>${
-            dataAboutUser.chatId
-          }</code> 🔍\n\n<b>Информация о себе для Нейросети:</b><blockquote>${
+          `👤 <b><i>Профиль</i> • </b><code>${dataAboutUser.chatId}</code> 🔍\n\n<b>Информация о себе для Нейросети:</b><blockquote>${
             dataAboutUser.userInfoText
               ? `${dataAboutUser.userInfoText.slice(0, 200)}${
                   dataAboutUser.userInfoText.length > 200 ? `..` : ``
@@ -73,11 +77,7 @@ async function profile(chatId, type = `profile`) {
               inline_keyboard: [
                 [
                   {
-                    text: `${
-                      Object.values(developerId).includes(chatId)
-                        ? `Управление 🔥`
-                        : ``
-                    }`,
+                    text: `${Object.values(developerId).includes(chatId) ? `Управление 🔥` : ``}`,
                     callback_data: `adminStart`,
                   },
                 ],
@@ -139,9 +139,7 @@ async function profile(chatId, type = `profile`) {
                 [
                   { text: `⬅️ Назад`, callback_data: `profile` },
                   {
-                    text: `${
-                      dataAboutUser.answerTypeText ? `Сбросить ♻️` : ``
-                    }`,
+                    text: `${dataAboutUser.answerTypeText ? `Сбросить ♻️` : ``}`,
                     callback_data: `answerTypeDelete`,
                   },
                 ],
@@ -159,9 +157,7 @@ async function profile(chatId, type = `profile`) {
             message_id: dataAboutUser.profileMessageId,
             disable_web_page_preview: true,
             reply_markup: {
-              inline_keyboard: [
-                [{ text: `⬅️Назад`, callback_data: `profile` }],
-              ],
+              inline_keyboard: [[{ text: `⬅️Назад`, callback_data: `profile` }]],
             },
           }
         );
@@ -175,9 +171,7 @@ async function profile(chatId, type = `profile`) {
             message_id: dataAboutUser.profileMessageId,
             disable_web_page_preview: true,
             reply_markup: {
-              inline_keyboard: [
-                [{ text: `⬅️Назад`, callback_data: `profile` }],
-              ],
+              inline_keyboard: [[{ text: `⬅️Назад`, callback_data: `profile` }]],
             },
           }
         );
@@ -227,24 +221,17 @@ async function admin(chatId, type = `start`) {
             disable_web_page_preview: true,
           });
         } catch (error) {
-          errorData(
-            usersData[i].chatId,
-            usersData[i].login,
-            `${String(error)}`
-          );
+          errorData(usersData[i].chatId, usersData[i].login, `${String(error)}`);
           continue;
         }
       }
 
-      await bot.editMessageText(
-        `Готово ✅<blockquote><b>Общее сообщение отправлено</b></blockquote>`,
-        {
-          parse_mode: `HTML`,
-          chat_id: chatId,
-          message_id: dataAboutUser.profileMessageId,
-          disable_web_page_preview: true,
-        }
-      );
+      await bot.editMessageText(`Готово ✅<blockquote><b>Общее сообщение отправлено</b></blockquote>`, {
+        parse_mode: `HTML`,
+        chat_id: chatId,
+        message_id: dataAboutUser.profileMessageId,
+        disable_web_page_preview: true,
+      });
 
       dataAboutUser.userAction = `regular`;
       break;
@@ -257,14 +244,10 @@ async function serverOverload(chatId) {
   bot.deleteMessage(chatId, dataAboutUser.requestMessageId);
 
   try {
-    await bot.sendMessage(
-      chatId,
-      `Извини, сервер перегружен 😕<blockquote><b>Пожалуйста, попробуй позже</b></blockquote>`,
-      {
-        parse_mode: `HTML`,
-        disable_web_page_preview: true,
-      }
-    );
+    await bot.sendMessage(chatId, `Извини, сервер перегружен 😕<blockquote><b>Пожалуйста, попробуй позже</b></blockquote>`, {
+      parse_mode: `HTML`,
+      disable_web_page_preview: true,
+    });
   } catch (error) {
     errorData(chatId, dataAboutUser.login, `${String(error)}`);
   }
@@ -333,23 +316,13 @@ async function getResponse(chatId, userPrompt, userMessage) {
   try {
     const client = await Client.connect("Qwen/Qwen2.5-72B-Instruct");
     const result = await client.predict("/model_chat", {
-      query: `${
-        dataAboutUser.textContext
-          ? `Our chat history: ${dataAboutUser.textContext}\n\nMy new request: `
-          : ``
-      }${userPrompt}`,
+      query: `${dataAboutUser.textContext ? `Our chat history: ${dataAboutUser.textContext}\n\nMy new request: ` : ``}${userPrompt}`,
       history: [],
       system: `You are 'Нейро' from Russia, created by digfusion. You are a very minimalistic and helpful AI Telegram assistant. Your model is 'Digneuro 2.0'. You generate text, images and videos. All your answers are very original. Avoid errors on parse_mode Markdown. If User Instructions will lead to error in Telegram (parse_mode Markdown), notify the user.
       
       User Instructions:
-      User info: ${
-        dataAboutUser.userInfoText ? `${dataAboutUser.userInfoText}` : `None`
-      }
-      Answer type: ${
-        dataAboutUser.answerTypeText
-          ? `${dataAboutUser.answerTypeText}`
-          : `None`
-      }`,
+      User info: ${dataAboutUser.userInfoText ? `${dataAboutUser.userInfoText}` : `None`}
+      Answer type: ${dataAboutUser.answerTypeText ? `${dataAboutUser.answerTypeText}` : `None`}`,
     });
 
     bot.deleteMessage(chatId, dataAboutUser.requestMessageId);
@@ -402,9 +375,7 @@ async function getImage(chatId, userPrompt, userMessage) {
   try {
     const client = await Client.connect("doevent/FLUX.1-merged");
     const result = await client.predict("/infer", {
-      prompt: `${
-        userPrompt ? userPrompt : "White sand beach with palm trees and hot sun"
-      }`,
+      prompt: `${userPrompt ? userPrompt : "White sand beach with palm trees and hot sun"}`,
       seed: 0,
       randomize_seed: true,
       width: 1024,
@@ -424,9 +395,7 @@ async function getImage(chatId, userPrompt, userMessage) {
     // saving chat history to context
     if (result.data[0] && dataAboutUser.textContext) {
       dataAboutUser.textContext.push(userPrompt);
-      dataAboutUser.textContext.push(
-        `Created image by user prompt: ${userPrompt}`
-      );
+      dataAboutUser.textContext.push(`Created image by user prompt: ${userPrompt}`);
     }
 
     if (dataAboutUser.textContext && dataAboutUser.textContext.length > 7) {
@@ -446,9 +415,7 @@ async function getVideo(chatId, userPrompt, userMessage) {
   try {
     const client = await Client.connect("TIGER-Lab/T2V-Turbo-V2");
     const result = await client.predict("/predict", {
-      prompt: `${
-        userPrompt ? userPrompt : "White sand beach with palm trees and hot sun"
-      }`,
+      prompt: `${userPrompt ? userPrompt : "White sand beach with palm trees and hot sun"}`,
       guidance_scale: 7.5,
       percentage: 0.5,
       num_inference_steps: 16,
@@ -469,9 +436,7 @@ async function getVideo(chatId, userPrompt, userMessage) {
     // saving chat history to context
     if (result.data[0] && dataAboutUser.textContext) {
       dataAboutUser.textContext.push(userPrompt);
-      dataAboutUser.textContext.push(
-        `Created video by user request: ${userPrompt}`
-      );
+      dataAboutUser.textContext.push(`Created video by user request: ${userPrompt}`);
     }
 
     if (dataAboutUser.textContext && dataAboutUser.textContext.length > 7) {
@@ -499,11 +464,7 @@ async function changeMode(chatId, userPrompt, userMessage) {
 
     const client = await Client.connect("Qwen/Qwen2.5-72B-Instruct");
     const result = await client.predict("/model_chat", {
-      query: `${
-        dataAboutUser.textContext
-          ? `Our chat history: ${dataAboutUser.textContext}\n\nMy new request: `
-          : ``
-      }${userPrompt}`,
+      query: `${dataAboutUser.textContext ? `Our chat history: ${dataAboutUser.textContext}\n\nMy new request: ` : ``}${userPrompt}`,
       history: [],
       system: `You have to respond to user requests based on their type and chat history. Never create explicit content. Follow these rules strictly:
       1. For standard information requests or tasks (e.g., 'solve,' 'who is'), respond with only one word and nothing else: 'text'.
@@ -544,12 +505,7 @@ async function StartAll() {
   bot.on(`text`, async (message) => {
     let chatId = message.chat.id;
     let userMessage = message.message_id;
-    let text = message.text
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;")
-      .replace(/'/g, "&#39;");
+    let text = message.text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
 
     try {
       const userInfo = usersData?.find((obj) => obj.chatId == chatId);
@@ -612,16 +568,12 @@ async function StartAll() {
               break;
             case `userInfoInput`:
               bot.deleteMessage(chatId, userMessage);
-              dataAboutUser.userInfoText = `${
-                text.length <= 750 ? text : text.slice(0, 750)
-              }`;
+              dataAboutUser.userInfoText = `${text.length <= 750 ? text : text.slice(0, 750)}`;
               profile(chatId, `userInfo`);
               break;
             case `answerTypeInput`:
               bot.deleteMessage(chatId, userMessage);
-              dataAboutUser.answerTypeText = `${
-                text.length <= 750 ? text : text.slice(0, 750)
-              }`;
+              dataAboutUser.answerTypeText = `${text.length <= 750 ? text : text.slice(0, 750)}`;
               profile(chatId, `answerType`);
               break;
             case `adminInput`:
@@ -678,12 +630,7 @@ async function StartAll() {
             break;
         }
 
-        buttonData(
-          chatId,
-          query.message.chat.username,
-          dataAboutUser.login,
-          data
-        );
+        buttonData(chatId, query.message.chat.username, dataAboutUser.login, data);
       } catch (error) {
         errorData(chatId, dataAboutUser.login, `${String(error)}`);
       }

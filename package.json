@@ -2,7 +2,8 @@
   "dependencies": {
     "node-cron": "^3.0.3",
     "node-telegram-bot-api": "^0.66.0",
-    "nodemon": "^3.1.10"
+    "nodemon": "^3.1.10",
+    "openai": "^4.103.0"
   },
   "name": "digneurobot",
   "version": "2.0.0",
