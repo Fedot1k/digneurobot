@@ -308,20 +308,39 @@ async function getResponse(chatId, userPrompt, userMessage) {
   const dataAboutUser = usersData.find((obj) => obj.chatId == chatId);
 
   try {
-    const client = await Client.connect("Qwen/Qwen2.5-72B-Instruct");
-    const result = await client.predict("/model_chat", {
-      query: `${dataAboutUser.textContext ? `Our chat history: ${dataAboutUser.textContext}\n\nMy new request: ` : ``}${userPrompt}`,
-      history: [],
-      system: `You are 'Нейро' from Russia, created by digfusion. You are a very minimalistic and helpful AI Telegram assistant. Your model is 'Digneuro 2.0'. You generate text, images and videos. All your answers are very original. Avoid errors on parse_mode Markdown. If User Instructions will lead to error in Telegram (parse_mode Markdown), notify the user.
+    const headers = {
+      Authorization: `Bearer ${config.KEY.Maverick}`,
+      "Content-Type": "application/json",
+    };
+    const payload = {
+      model: "meta-llama/llama-4-maverick",
+      messages: [
+        {
+          role: "system",
+          content: `You are 'Нейро' from Russia, created by digfusion. You are a very minimalistic and helpful AI Telegram assistant. Your model is 'Digneuro 2.0'. You generate text, images and videos. All your answers are very original. Avoid errors on parse_mode Markdown. If User Instructions will lead to error in Telegram (parse_mode Markdown), notify the user.
       
       User Instructions:
       User info: ${dataAboutUser.userInfoText ? `${dataAboutUser.userInfoText}` : `None`}
       Answer type: ${dataAboutUser.answerTypeText ? `${dataAboutUser.answerTypeText}` : `None`}`,
+        },
+        {
+          role: "user",
+          content: `${dataAboutUser.textContext ? `Our chat history: ${dataAboutUser.textContext}\n\nMy new request: ` : ``}${userPrompt}`,
+        },
+      ],
+    };
+
+    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+      method: "POST",
+      headers,
+      body: JSON.stringify(payload),
     });
+
+    const data = await response.json();
 
     bot.deleteMessage(chatId, dataAboutUser.requestMessageId);
 
-    let progressOutput = result.data[1][0][1]
+    let progressOutput = data.choices[0].message.content
       .replace(/\\sqrt\{([^}]+)\}/g, "sqrt($1)")
       .replace(/\\cdot/g, "*")
       .replace(/\\quad/g, " ")
@@ -346,9 +365,9 @@ async function getResponse(chatId, userPrompt, userMessage) {
       .split("");
 
     // saving chat history to context
-    if (result.data[1][0][1] && dataAboutUser.textContext) {
+    if (data.choices[0].message.content && dataAboutUser.textContext) {
       dataAboutUser.textContext.push(userPrompt);
-      dataAboutUser.textContext.push(result.data[1][0][1]);
+      dataAboutUser.textContext.push(data.choices[0].message.content);
     }
 
     if (dataAboutUser.textContext && dataAboutUser.textContext.length > 7) {
@@ -456,19 +475,38 @@ async function changeMode(chatId, userPrompt, userMessage) {
         dataAboutUser.requestMessageId = message.message_id;
       });
 
-    const client = await Client.connect("Qwen/Qwen2.5-72B-Instruct");
-    const result = await client.predict("/model_chat", {
-      query: `${dataAboutUser.textContext ? `Our chat history: ${dataAboutUser.textContext}\n\nMy new request: ` : ``}${userPrompt}`,
-      history: [],
-      system: `You have to respond to user requests based on their type and chat history. Never create explicit content. Follow these rules strictly:
+    const headers = {
+      Authorization: `Bearer ${config.KEY.Maverick}`,
+      "Content-Type": "application/json",
+    };
+    const payload = {
+      model: "meta-llama/llama-4-maverick", // "meta-llama/llama-4-maverick", "deepseek/deepseek-chat-v3-0324"
+      messages: [
+        {
+          role: "system",
+          content: `You have to respond to user requests based on their type and chat history. Never create explicit content. Follow these rules strictly:
       1. For standard information requests or tasks (e.g., 'solve,' 'who is'), respond with only one word and nothing else: 'text'.
       2. For image generation requests (e.g., 'draw,' 'create an image of', 'now add'), respond with 'image' and what user wants to get as a result with enhanced prompt (divide with '@').
       3. For video generation requests (e.g., 'video with,' 'create a video', 'change'), respond with 'video' and what user wants to get as a result with enhanced prompt in english translated (divide with '@').
       4. If the prompt is empty (e.g., 'image' 'video'), respond accordingly with 'image' or 'video' and random cool prompt from you (divide with '@').
       5. If the request doesn't fit any of these categories or seems nonsensical, respond with: text.`,
+        },
+        {
+          role: "user",
+          content: `${dataAboutUser.textContext ? `Our chat history: ${dataAboutUser.textContext}\n\nMy new request: ` : ``}${userPrompt}`,
+        },
+      ],
+    };
+
+    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+      method: "POST",
+      headers,
+      body: JSON.stringify(payload),
     });
 
-    let promptDecision = result.data[1][0][1].split("@");
+    const data = await response.json();
+
+    let promptDecision = data.choices[0].message.content.split("@");
 
     switch (promptDecision[0]) {
       case `text`:
