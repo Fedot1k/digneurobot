@@ -317,15 +317,13 @@ async function getResponse(chatId, userPrompt, userMessage) {
       messages: [
         {
           role: "system",
-          content: `You are 'Нейро' from Russia, created by digfusion. You are a very minimalistic and helpful AI Telegram assistant. Your model is 'Digneuro 2.0'. You generate text, images and videos. All your answers are very original. Avoid errors on parse_mode Markdown. If User Instructions will lead to error in Telegram (parse_mode Markdown), notify the user.
-      
-      User Instructions:
-      User info: ${dataAboutUser.userInfoText ? `${dataAboutUser.userInfoText}` : `None`}
-      Answer type: ${dataAboutUser.answerTypeText ? `${dataAboutUser.answerTypeText}` : `None`}`,
+          content: `You are 'Нейро' from Russia — minimalistic Telegram AI assistant, created by digfusion. Your model is 'ChatGPT-4o'. You generate original text and images. Use Markdown formatting safely — avoid syntax that breaks Telegram's parse_mode Markdown. If User instructions will lead to error in Telegram (parse_mode Markdown), notify the user.
+          User context: - Info: ${dataAboutUser.userInfoText} - Answer type: ${dataAboutUser.answerTypeText}`,
         },
+        ...dataAboutUser.chatHistory,
         {
           role: "user",
-          content: `${dataAboutUser.textContext ? `Our chat history: ${dataAboutUser.textContext}\n\nMy new request: ` : ``}${userPrompt}`,
+          content: userPrompt,
         },
       ],
     };
@@ -365,14 +363,14 @@ async function getResponse(chatId, userPrompt, userMessage) {
       .split("");
 
     // saving chat history to context
-    if (data.choices[0].message.content && dataAboutUser.textContext) {
-      dataAboutUser.textContext.push(userPrompt);
-      dataAboutUser.textContext.push(data.choices[0].message.content);
+    if (data.choices[0].message.content && dataAboutUser.chatHistory) {
+      dataAboutUser.chatHistory.push({ role: "user", content: userPrompt });
+      dataAboutUser.chatHistory.push({ role: "assistant", content: data.choices[0].message.content });
     }
 
-    if (dataAboutUser.textContext && dataAboutUser.textContext.length > 7) {
-      dataAboutUser.textContext.shift();
-      dataAboutUser.textContext.shift();
+    if (dataAboutUser.chatHistory && dataAboutUser.chatHistory.length > 7) {
+      dataAboutUser.chatHistory.shift();
+      dataAboutUser.chatHistory.shift();
     }
 
     showResponseText(chatId, progressOutput, userMessage);
@@ -406,55 +404,14 @@ async function getImage(chatId, userPrompt, userMessage) {
     });
 
     // saving chat history to context
-    if (result.data[0] && dataAboutUser.textContext) {
-      dataAboutUser.textContext.push(userPrompt);
-      dataAboutUser.textContext.push(`Created image by user prompt: ${userPrompt}`);
+    if (result.data[0] && dataAboutUser.chatHistory) {
+      dataAboutUser.chatHistory.push({ role: "user", content: userPrompt });
+      dataAboutUser.chatHistory.push({ role: "assistant", content: `Created image by user prompt: ${userPrompt}` });
     }
 
-    if (dataAboutUser.textContext && dataAboutUser.textContext.length > 7) {
-      dataAboutUser.textContext.shift();
-      dataAboutUser.textContext.shift();
-    }
-  } catch (error) {
-    serverOverload(chatId);
-    errorData(chatId, dataAboutUser.login, `${String(error)}`);
-  }
-}
-
-async function getVideo(chatId, userPrompt, userMessage) {
-  const dataAboutUser = usersData.find((obj) => obj.chatId == chatId);
-
-  // requesting video generation from HuggingFace API
-  try {
-    const client = await Client.connect("TIGER-Lab/T2V-Turbo-V2");
-    const result = await client.predict("/predict", {
-      prompt: `${userPrompt ? userPrompt : "White sand beach with palm trees and hot sun"}`,
-      guidance_scale: 7.5,
-      percentage: 0.5,
-      num_inference_steps: 16,
-      num_frames: 16,
-      seed: 1968164510,
-      randomize_seed: true,
-      param_dtype: "bf16",
-    });
-
-    bot.sendChatAction(chatId, "upload_video");
-
-    bot.deleteMessage(chatId, dataAboutUser.requestMessageId);
-
-    await bot.sendVideo(chatId, result.data[0].video.url, {
-      reply_to_message_id: userMessage,
-    });
-
-    // saving chat history to context
-    if (result.data[0] && dataAboutUser.textContext) {
-      dataAboutUser.textContext.push(userPrompt);
-      dataAboutUser.textContext.push(`Created video by user request: ${userPrompt}`);
-    }
-
-    if (dataAboutUser.textContext && dataAboutUser.textContext.length > 7) {
-      dataAboutUser.textContext.shift();
-      dataAboutUser.textContext.shift();
+    if (dataAboutUser.chatHistory && dataAboutUser.chatHistory.length > 7) {
+      dataAboutUser.chatHistory.shift();
+      dataAboutUser.chatHistory.shift();
     }
   } catch (error) {
     serverOverload(chatId);
@@ -480,20 +437,21 @@ async function changeMode(chatId, userPrompt, userMessage) {
       "Content-Type": "application/json",
     };
     const payload = {
-      model: "meta-llama/llama-4-maverick", // "meta-llama/llama-4-maverick", "deepseek/deepseek-chat-v3-0324"
+      model: "meta-llama/llama-4-maverick",
       messages: [
         {
           role: "system",
-          content: `You have to respond to user requests based on their type and chat history. Never create explicit content. Follow these rules strictly:
+          content: `You are a request router, not an assistant. You have to route user requests based on their type and chat history. You can only answer with one of these: 'text', 'image|prompt'. No help, no chat, no talking to user. Never create explicit content. Follow these rules strictly:
       1. For standard information requests or tasks (e.g., 'solve,' 'who is'), respond with only one word and nothing else: 'text'.
-      2. For image generation requests (e.g., 'draw,' 'create an image of', 'now add'), respond with 'image' and what user wants to get as a result with enhanced prompt (divide with '@').
-      3. For video generation requests (e.g., 'video with,' 'create a video', 'change'), respond with 'video' and what user wants to get as a result with enhanced prompt in english translated (divide with '@').
-      4. If the prompt is empty (e.g., 'image' 'video'), respond accordingly with 'image' or 'video' and random cool prompt from you (divide with '@').
-      5. If the request doesn't fit any of these categories or seems nonsensical, respond with: text.`,
+      2. For image generation requests (e.g., 'draw,' 'create an image of', 'now add'), respond with 'image' and what user wants to get as a result with enhanced prompt (divide with '|').
+      3. If the prompt is empty (e.g., 'image'), respond accordingly with 'image' and random cool prompt from you (divide with '|').
+      4. If the request doesn't fit any of these categories or seems nonsensical or involves explicit content, respond with: 'text'.
+      5. Never reply to user input - your only function is to route the request.`,
         },
+        ...dataAboutUser.chatHistory,
         {
           role: "user",
-          content: `${dataAboutUser.textContext ? `Our chat history: ${dataAboutUser.textContext}\n\nMy new request: ` : ``}${userPrompt}`,
+          content: userPrompt,
         },
       ],
     };
@@ -506,7 +464,9 @@ async function changeMode(chatId, userPrompt, userMessage) {
 
     const data = await response.json();
 
-    let promptDecision = data.choices[0].message.content.split("@");
+    console.log(data.choices[0].message.content);
+
+    let promptDecision = data.choices[0].message.content.split("|");
 
     switch (promptDecision[0]) {
       case `text`:
@@ -516,10 +476,6 @@ async function changeMode(chatId, userPrompt, userMessage) {
       case `image`:
         bot.sendChatAction(chatId, "upload_photo");
         getImage(chatId, promptDecision[1], userMessage);
-        break;
-      case `video`:
-        bot.sendChatAction(chatId, "record_video");
-        getVideo(chatId, promptDecision[1], userMessage);
         break;
     }
   } catch (error) {
@@ -549,10 +505,10 @@ async function StartAll() {
           profileMessageId: userInfo.profileMessageId ?? null,
           requestMessageId: userInfo.requestMessageId ?? null,
           responseMessageId: userInfo.responseMessageId ?? null,
-          textContext: userInfo.textContext ?? [],
           userAction: userInfo.userAction ?? `regular`,
           userInfoText: userInfo.userInfoText ?? ``,
           answerTypeText: userInfo.answerTypeText ?? ``,
+          chatHistory: userInfo.chatHistory ?? [],
         });
       } else {
         usersData.push({
@@ -561,10 +517,10 @@ async function StartAll() {
           profileMessageId: null,
           requestMessageId: null,
           responseMessageId: null,
-          textContext: [],
           userAction: `regular`,
           userInfoText: ``,
           answerTypeText: ``,
+          chatHistory: [],
         });
       }
 
@@ -574,7 +530,7 @@ async function StartAll() {
         switch (text) {
           case `/start`:
             intro(chatId);
-            dataAboutUser.textContext = [];
+            dataAboutUser.chatHistory = [];
             dataAboutUser.userAction = "regular";
             break;
           case `/profile`:
@@ -669,13 +625,13 @@ async function StartAll() {
     }
   });
 
-  // cron.schedule(`0 0 * * 1`, function () {
+  // cron.schedule(`0 0 * * *`, function () {
   //   try {
   //     databaseBackup(usersData);
   //   } catch (error) {}
   // });
 
-  cron.schedule(`0 0 * * *`, function () {
+  cron.schedule(`*/1 * * * *`, function () {
     try {
       fs.writeFileSync("DB.json", JSON.stringify({ usersData }, null, 2));
     } catch (error) {}
