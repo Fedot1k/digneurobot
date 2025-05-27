@@ -272,7 +272,7 @@ async function showResponseText(chatId, progressOutput, userMessage) {
 
       // editing text message with symbols
       for (let i = 1; i < chunkMessage.length; i += outputSpeed) {
-        changingText += `${chunkMessage.slice(i, i + outputSpeed).join("")}`;
+        changingText += `${chunkMessage.slice(i, i + outputSpeed)}`;
 
         await bot.editMessageText(`${changingText} ⚪️`, {
           chat_id: chatId,
@@ -336,8 +336,6 @@ async function getResponse(chatId, userPrompt, userMessage) {
 
     const data = await response.json();
 
-    bot.deleteMessage(chatId, dataAboutUser.requestMessageId);
-
     let progressOutput = data.choices[0].message.content
       .replace(/\\sqrt\{([^}]+)\}/g, "sqrt($1)")
       .replace(/\\cdot/g, "*")
@@ -359,8 +357,7 @@ async function getResponse(chatId, userPrompt, userMessage) {
       .replace(/\\tan/g, "tan")
       .replace(/\\log/g, "log")
       .replace(/\\ln/g, "ln")
-      .replace(/\\/g, "")
-      .split("");
+      .replace(/\\/g, "");
 
     // saving chat history to context
     if (data.choices[0].message.content && dataAboutUser.chatHistory) {
@@ -372,6 +369,8 @@ async function getResponse(chatId, userPrompt, userMessage) {
       dataAboutUser.chatHistory.shift();
       dataAboutUser.chatHistory.shift();
     }
+
+    bot.deleteMessage(chatId, dataAboutUser.requestMessageId);
 
     showResponseText(chatId, progressOutput, userMessage);
   } catch (error) {
