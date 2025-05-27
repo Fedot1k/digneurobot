@@ -464,8 +464,6 @@ async function changeMode(chatId, userPrompt, userMessage) {
 
     const data = await response.json();
 
-    console.log(data.choices[0].message.content);
-
     let promptDecision = data.choices[0].message.content.split("|");
 
     switch (promptDecision[0]) {
