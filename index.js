@@ -6,9 +6,9 @@ import fs from "fs";
 import { config } from "./config.js";
 import { textData, buttonData, errorData, databaseBackup } from "./watcher.js";
 
-const bot = new TelegramBot(config.TOKEN.Trial, { polling: true });
+const bot = new TelegramBot(config.TOKEN.Neuro, { polling: true });
 
-const botName = { Trial: `trialdynamicsbot`, Neuro: `digneurobot` }.Trial;
+const botName = { Trial: `trialdynamicsbot`, Neuro: `digneurobot` }.Neuro;
 
 const developerId = { Fedot: 870204479 };
 
