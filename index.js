@@ -25,7 +25,7 @@ async function intro(chatId) {
   try {
     await bot.sendMessage(
       chatId,
-      `Привет, это <b>Нейросетивичок</b>\nЧтобы задать вопрос, напиши его в чате\n\n<b>Команды:</b>\n<blockquote>/start - Новый чат\n/profile - Профиль</blockquote>`,
+      `Привет, это <b>Нейро</b>\nЧтобы задать вопрос, напиши его в чате\n\n<b>Команды:</b>\n<blockquote>/start - Новый чат\n/profile - Профиль</blockquote>`,
       {
         parse_mode: `HTML`,
         disable_web_page_preview: true,
@@ -49,7 +49,7 @@ async function profile(chatId, type = `profile`) {
         break;
       case `profile`:
         await bot.editMessageText(
-          `👤 <b><i>Профиль</i> • </b><code>${dataAboutUser.chatId}</code> 🔍\n\n<b>Информация о себе для Нейросети:</b><blockquote>${
+          `👤 <b><i>Профиль</i> • </b><code>${dataAboutUser.chatId}</code> 🔍\n\n<b>Информация о себе для Нейро:</b><blockquote>${
             dataAboutUser.userInfoText
               ? `${dataAboutUser.userInfoText.slice(0, 200)}${
                   dataAboutUser.userInfoText.length > 200 ? `..` : ``
@@ -77,13 +77,7 @@ async function profile(chatId, type = `profile`) {
                 ],
                 [
                   { text: `❕О боте`, callback_data: `about` },
-                  { text: `digfusion❔`, callback_data: `digfusion` },
-                ],
-                [
-                  {
-                    text: `Связь 💭`,
-                    url: `https://t.me/digsupport`,
-                  },
+                  { text: `от digfusion`, url: `https://t.me/digfusion` },
                 ],
               ],
             },
@@ -92,7 +86,7 @@ async function profile(chatId, type = `profile`) {
         break;
       case `userInfo`:
         await bot.editMessageText(
-          `👤 <b><i>Профиль</i> • О себе 🔍</b>\n\n<b>Информация для Нейросети:</b>${
+          `👤 <b><i>Профиль</i> • О себе 🔍</b>\n\n<b>Информация для Нейро:</b>${
             dataAboutUser.userInfoText
               ? `<blockquote><code>${dataAboutUser.userInfoText}</code></blockquote>\n\n<i>Напишите текст в чате, чтобы изменить..</i>`
               : `<blockquote><i>Напишите текст в чате, чтобы добавить..</i></blockquote>`
@@ -144,23 +138,9 @@ async function profile(chatId, type = `profile`) {
         break;
       case `about`:
         await bot.editMessageText(
-          `<b><i>❕Нейро • О боте</i></b>\n\n<b>Кто такой Нейросетивичок?</b><blockquote><b>Бот</b>, разработанный компанией <b><i>digfusion</i></b> с использованием <b>ChatGPT API</b></blockquote>\n\n<b>Главные преимущества:</b><blockquote><b>• Быстрые ответы</b>\nМощная нейросеть отвечает на вопросы с <b>невероятной скоростью</b>\n\n<b>• Неограниченные запросы</b>\nОтсутствие лимитов открывает доступ к <b>бесконечному пользованию</b></blockquote>`,
+          `<b><i>❕Нейро • О боте</i></b>\n\n<b>Кто такой Нейро?</b><blockquote><b>Бот</b>, разработанный компанией <b><i>digfusion</i></b> с использованием <b>ChatGPT API</b></blockquote>\n\n<b>Главные преимущества:</b><blockquote><b>• Быстрые ответы</b>\nМощный бот отвечает на вопросы с <b>невероятной скоростью</b>\n\n<b>• Неограниченные запросы</b>\nОтсутствие лимитов открывает доступ к <b>бесконечному пользованию</b></blockquote>`,
           {
             parse_mode: `HTML`,
-            chat_id: chatId,
-            message_id: dataAboutUser.profileMessageId,
-            disable_web_page_preview: true,
-            reply_markup: {
-              inline_keyboard: [[{ text: `⬅️Назад`, callback_data: `profile` }]],
-            },
-          }
-        );
-        break;
-      case `digfusion`:
-        await bot.editMessageText(
-          `<b><i>❔digfusion • О нас</i></b>\n\n<blockquote>Компания <b><i>digfusion</i></b> - <b>начинающий стартап,</b> разрабатывающий <b>свои приложения</b> и предоставляющий услуги по <b>созданию чат-ботов</b> различных типов!\n\nБыстро, надежно и с умом. Нам доверяют <b>известные личности,</b> и мы делаем продукт, который <b>цепляет и приносит результат</b>\n\n<i>Это приложение разработано <b>digfusion</b> с душой 🤍</i></blockquote>\n\n<b><a href="https://digfusion.ru/">Сайт</a> • <a href="https://t.me/digfusion">Новости</a> • <a href="https://t.me/digfeedbacks">Отзывы</a></b>`,
-          {
-            parse_mode: "HTML",
             chat_id: chatId,
             message_id: dataAboutUser.profileMessageId,
             disable_web_page_preview: true,
