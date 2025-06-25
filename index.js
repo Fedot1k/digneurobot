@@ -10,8 +10,6 @@ const bot = new TelegramBot(config.TOKEN.Neuro, { polling: true });
 
 const botName = { Trial: `trialdynamicsbot`, Neuro: `digneurobot` }.Neuro;
 
-const developerId = { Fedot: 870204479 };
-
 let usersData = [];
 
 bot.setMyCommands([
@@ -49,7 +47,7 @@ async function profile(chatId, type = `profile`) {
         break;
       case `profile`:
         await bot.editMessageText(
-          `👤 <b><i>Профиль</i> • </b><code>${dataAboutUser.chatId}</code> 🔍\n\n<b>Информация о себе для Нейро:</b><blockquote>${
+          `<b>Информация о себе для Нейро:</b><blockquote>${
             dataAboutUser.userInfoText
               ? `${dataAboutUser.userInfoText.slice(0, 200)}${
                   dataAboutUser.userInfoText.length > 200 ? `..` : ``
@@ -70,12 +68,6 @@ async function profile(chatId, type = `profile`) {
             reply_markup: {
               inline_keyboard: [
                 [
-                  {
-                    text: `${Object.values(developerId).includes(chatId) ? `Управление 🔥` : ``}`,
-                    callback_data: `adminStart`,
-                  },
-                ],
-                [
                   { text: `❕О боте`, callback_data: `about` },
                   { text: `от digfusion`, url: `https://t.me/digfusion` },
                 ],
@@ -86,10 +78,10 @@ async function profile(chatId, type = `profile`) {
         break;
       case `userInfo`:
         await bot.editMessageText(
-          `👤 <b><i>Профиль</i> • О себе 🔍</b>\n\n<b>Информация для Нейро:</b>${
+          `<b>Информация для Нейро:</b>\n\n${
             dataAboutUser.userInfoText
-              ? `<blockquote><code>${dataAboutUser.userInfoText}</code></blockquote>\n\n<i>Напишите текст в чате, чтобы изменить..</i>`
-              : `<blockquote><i>Напишите текст в чате, чтобы добавить..</i></blockquote>`
+              ? `<blockquote>${dataAboutUser.userInfoText}</blockquote>\n\n<i>Напиши текст в чате, чтобы изменить..</i>`
+              : `<blockquote><i>Напиши текст в чате, чтобы добавить..</i></blockquote>`
           }`,
           {
             parse_mode: `HTML`,
@@ -101,7 +93,7 @@ async function profile(chatId, type = `profile`) {
                 [
                   { text: `⬅️ Назад`, callback_data: `profile` },
                   {
-                    text: `${dataAboutUser.userInfoText ? `Сбросить ♻️` : ``}`,
+                    text: `${dataAboutUser.userInfoText ? `Сбросить 🗑` : ``}`,
                     callback_data: `userInfoDelete`,
                   },
                 ],
@@ -112,10 +104,10 @@ async function profile(chatId, type = `profile`) {
         break;
       case `answerType`:
         await bot.editMessageText(
-          `👤 <b><i>Профиль</i> • Тип ответа 🔍</b>\n\n<b>Какой ответ вы хотели бы получить:</b>${
+          `<b>Какой ответ вы хотели бы получить:</b>\n\n${
             dataAboutUser.answerTypeText
-              ? `<blockquote><code>${dataAboutUser.answerTypeText}</code></blockquote>\n\n<i>Напишите текст в чате, чтобы изменить..</i>`
-              : `<blockquote><i>Напишите текст в чате, чтобы добавить..</i></blockquote>`
+              ? `<blockquote>${dataAboutUser.answerTypeText}</blockquote>\n\n<i>Напиши текст в чате, чтобы изменить..</i>`
+              : `<blockquote><i>Напиши текст в чате, чтобы добавить..</i></blockquote>`
           }`,
           {
             parse_mode: `HTML`,
@@ -127,7 +119,7 @@ async function profile(chatId, type = `profile`) {
                 [
                   { text: `⬅️ Назад`, callback_data: `profile` },
                   {
-                    text: `${dataAboutUser.answerTypeText ? `Сбросить ♻️` : ``}`,
+                    text: `${dataAboutUser.answerTypeText ? `Сбросить 🗑` : ``}`,
                     callback_data: `answerTypeDelete`,
                   },
                 ],
@@ -138,7 +130,7 @@ async function profile(chatId, type = `profile`) {
         break;
       case `about`:
         await bot.editMessageText(
-          `<b><i>❕Нейро • О боте</i></b>\n\n<b>Кто такой Нейро?</b><blockquote><b>Бот</b>, разработанный компанией <b><i>digfusion</i></b> с использованием <b>ChatGPT API</b></blockquote>\n\n<b>Главные преимущества:</b><blockquote><b>• Быстрые ответы</b>\nМощный бот отвечает на вопросы с <b>невероятной скоростью</b>\n\n<b>• Неограниченные запросы</b>\nОтсутствие лимитов открывает доступ к <b>бесконечному пользованию</b></blockquote>`,
+          `<b>Кто такой Нейро?</b><blockquote><b>Бот</b>, разработанный компанией <b><i>digfusion</i></b> с использованием <b>ChatGPT API</b></blockquote>\n\n<b>Главные преимущества:</b><blockquote><b>• Быстрые ответы</b>\nМощный бот отвечает на вопросы с <b>невероятной скоростью</b></blockquote>\n<blockquote><b>• Неограниченные запросы</b>\nОтсутствие лимитов открывает доступ к <b>бесконечному пользованию</b></blockquote>`,
           {
             parse_mode: `HTML`,
             chat_id: chatId,
@@ -153,62 +145,6 @@ async function profile(chatId, type = `profile`) {
     }
   } catch (error) {
     errorData(chatId, dataAboutUser.login, `${String(error)}`);
-  }
-}
-
-async function admin(chatId, type = `start`) {
-  const dataAboutUser = usersData.find((obj) => obj.chatId == chatId);
-
-  switch (type) {
-    case `start`:
-      await bot.editMessageText(`Введи текст общего сообщения..`, {
-        parse_mode: `HTML`,
-        chat_id: chatId,
-        message_id: dataAboutUser.profileMessageId,
-        disable_web_page_preview: true,
-        reply_markup: {
-          inline_keyboard: [[{ text: `⬅️Назад`, callback_data: `profile` }]],
-        },
-      });
-      break;
-    case `next`:
-      await bot.editMessageText(dataAboutUser.userAction, {
-        parse_mode: `HTML`,
-        chat_id: chatId,
-        message_id: dataAboutUser.profileMessageId,
-        disable_web_page_preview: true,
-        reply_markup: {
-          inline_keyboard: [
-            [
-              { text: `⬅️Назад`, callback_data: `adminStart` },
-              { text: `Отправить ✅`, callback_data: `adminSend` },
-            ],
-          ],
-        },
-      });
-      break;
-    case `send`:
-      for (let i = 0; i < usersData.length; i++) {
-        try {
-          await bot.sendMessage(usersData[i].chatId, dataAboutUser.userAction, {
-            parse_mode: "HTML",
-            disable_web_page_preview: true,
-          });
-        } catch (error) {
-          errorData(usersData[i].chatId, usersData[i].login, `${String(error)}`);
-          continue;
-        }
-      }
-
-      await bot.editMessageText(`Готово ✅<blockquote><b>Общее сообщение отправлено</b></blockquote>`, {
-        parse_mode: `HTML`,
-        chat_id: chatId,
-        message_id: dataAboutUser.profileMessageId,
-        disable_web_page_preview: true,
-      });
-
-      dataAboutUser.userAction = `regular`;
-      break;
   }
 }
 
@@ -470,7 +406,7 @@ async function StartAll() {
   bot.on(`text`, async (message) => {
     let chatId = message.chat.id;
     let userMessage = message.message_id;
-    let text = message.text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+    let text = message.text.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/'/g, "&#39;").replace("<", "‹").replace(">", "›");
 
     try {
       const userInfo = usersData?.find((obj) => obj.chatId == chatId);
@@ -541,11 +477,6 @@ async function StartAll() {
               dataAboutUser.answerTypeText = `${text.length <= 750 ? text : text.slice(0, 750)}`;
               profile(chatId, `answerType`);
               break;
-            case `adminInput`:
-              bot.deleteMessage(chatId, userMessage);
-              dataAboutUser.userAction = message.text;
-              admin(chatId, `next`);
-              break;
           }
         }
       }
@@ -575,16 +506,6 @@ async function StartAll() {
           case `digfusion`:
             profile(chatId, `digfusion`);
             break;
-          case `adminStart`:
-            dataAboutUser.userAction = `adminInput`;
-            admin(chatId);
-            break;
-          case `adminBack`:
-            admin(chatId);
-            break;
-          case `adminSend`:
-            admin(chatId, `send`);
-            break;
           case `userInfoDelete`:
             dataAboutUser.userInfoText = ``;
             profile(chatId, `userInfo`);
@@ -601,12 +522,6 @@ async function StartAll() {
       }
     }
   });
-
-  // cron.schedule(`0 0 * * *`, function () {
-  //   try {
-  //     databaseBackup(usersData);
-  //   } catch (error) {}
-  // });
 
   cron.schedule(`*/1 * * * *`, function () {
     try {
